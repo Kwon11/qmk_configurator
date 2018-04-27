@@ -308,14 +308,14 @@ $(document).ready(() => {
       load_layouts($keyboard.val());
 
       layout = data.layout;
-      $('#layout').val(layout);
+      $layout.val(layout);
       setSelectWidth($('#layout'));
 
       $('#keymap-name').val(data.keymap);
 
       load_converted_keymap(data.layers);
 
-      render_layout($('#layout').val());
+      render_layout($layout.val());
     };
 
     reader.readAsText(files[0]);

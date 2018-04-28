@@ -31,15 +31,7 @@ layout: qmk
     <p><label>Keymap:</label></p>
     <div id="visual-keymap"></div>
       </div>
-      <div class="qmkc-control"></div>
-      <div class="qmkc-keycodes"></div>
-      <div class="qmkc-console">
-  <textarea id="status" readonly></textarea>
-      </div>
-    </div>
-<select id="template" style="display:none;">
-    <option id="templateOption"></option>
-</select>
+      <div class="qmkc-control">
 <div id="controller">
   <div id="controller-top">
     <label>Keyboard: <select id="keyboard" onChange=" setSelectWidth(this);"></select></label>
@@ -57,6 +49,15 @@ layout: qmk
     <input id="fileImport" type="file" />
   </div>
 </div>
+      </div>
+      <div class="qmkc-keycodes"></div>
+      <div class="qmkc-console">
+  <textarea id="status" readonly></textarea>
+      </div>
+    </div>
+<select id="template" style="display:none;">
+    <option id="templateOption"></option>
+</select>
 <div class="split-content">
   <div class="right-side">
   </div>

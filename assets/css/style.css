@@ -1145,7 +1145,7 @@ input[type='number'] {
   grid-row-gap: 10px;
   grid-template:
     1fr
-    64px
+    90px
     1fr / 64px 1fr 1fr;
   grid-template-areas:
    'qmkc-layers  qmkc-keymap  qmkc-keycodes'

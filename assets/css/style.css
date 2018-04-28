@@ -1132,3 +1132,38 @@ input[type='number'] {
 .bes-jobs {
   justify-self: end;
 }
+
+.qmkc-app {
+  display: grid;
+  width: 100%;
+  height: 1080px;
+  grid-gap: 10px;
+  grid-template:
+    1fr
+    90px
+    1fr / 64px 1fr 1fr;
+  grid-template-areas:
+   'qmkc-layers  qmkc-keymap  qmkc-keycodes'
+   'qmkc-control qmkc-control qmkc-keycodes'
+   'qmkc-console qmkc-console qmkc-keycodes';
+}
+
+.qmkc-layers {
+  background: red;
+}
+
+.qmkc-keymap {
+  background: blue;
+}
+
+.qmkc-keycodes {
+  background: green;
+}
+
+.qmkc-console {
+  background: #333;
+}
+
+.qmkc-control {
+  background: turquoise;
+}

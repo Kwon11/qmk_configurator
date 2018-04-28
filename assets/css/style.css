@@ -688,6 +688,8 @@ button {
 }
 
 #status {
+  height: 100%;
+  width: 100%;
   padding: 2px 5px;
   background: #272822;
   color: #f8f8f2;

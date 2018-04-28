@@ -336,7 +336,7 @@
 
 body {
   background-color: #fff;
-  padding: 50px;
+  padding-top: 25px;
   font: 14px/1.5 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
   font-weight: 400;
@@ -1154,18 +1154,15 @@ input[type='number'] {
 }
 
 .qmkc-layers {
-  background: red;
   grid-area: qmkc-layers;
 }
 
 .qmkc-keymap {
-  background: blue;
   grid-area: qmkc-keymap;
   justify-self: center;
 }
 
 .qmkc-keycodes {
-  background: green;
   grid-area: qmkc-keycodes;
 }
 
@@ -1173,10 +1170,8 @@ input[type='number'] {
   grid-area: qmkc-console;
   justify-self: stretch;
   align-self: stretch;
-  background: #333;
 }
 
 .qmkc-control {
   grid-area: qmkc-control;
-  background: turquoise;
 }

@@ -798,21 +798,23 @@ button {
 }
 
 .left-side {
-  float: left;
+/*  float: left; */
   pointer-events: all;
 }
 
 .right-side {
-  float: left;
+/*  float: left; */
   pointer-events: all;
 }
 
+/*
 .rigth-side:after {
   content: ' ';
   display: block;
   height: 0;
   clear: both;
 }
+*/
 
 #visual-keymap {
   background: #fff;
@@ -826,12 +828,14 @@ button {
   position: relative;
 }
 
+/*
 #visual-keymap:after {
   content: ' ';
   display: block;
   height: 0;
   clear: both;
 }
+*/
 
 .key {
   border: #ccc 1px solid;

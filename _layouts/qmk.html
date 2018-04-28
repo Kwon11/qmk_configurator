@@ -42,11 +42,11 @@
         <p>{{ site.description | default: site.github.project_tagline }}</p>
 
       </header>
-      <section>
+    </div>
 
       {{ content }}
 
-      </section>
+    <div class="wrapper">
       <footer>
         {% if site.github.is_project_page %}
         <p>This project is maintained by <a href="{{ site.github.owner_url }}">QMK collaborators</a> and contributors like you!</p>

@@ -1161,6 +1161,8 @@ input[type='number'] {
 .qmkc-keymap {
   background: blue;
   grid-area: qmkc-keymap;
+  justify-self: center;
+  align-self: center;
 }
 
 .qmkc-keycodes {

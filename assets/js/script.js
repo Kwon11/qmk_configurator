@@ -502,12 +502,13 @@ $(document).ready(() => {
       acc.count += 1;
     } else if (d.code) {
       // append a keycode
+      var title = d.title ? d.title + ' ' + d.code: d.code;
       var keycode = $('<div>', {
         class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
         'data-code': d.code,
         'data-type': d.type,
         html: d.name,
-        title: d.title + ' ' + d.code
+        title: title
       });
       acc.curEl().append(keycode);
     } else {

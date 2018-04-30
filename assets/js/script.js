@@ -491,8 +491,8 @@ $(document).ready(() => {
   function createKeyCodeUI(acc, d) {
     if (d.tab) {
       var $ul = acc.$el.find('ul');
-      $ul.append('li').append('a href="#tabs-' + acc.count).html(d.tab);
-      var $newTab = acc.$el.append('div id="#tabs-' + acc.count);
+      $ul.append('<li><a href="#tabs-' + acc.count +'></a>').html(d.tab);
+      var $newTab = acc.$el.append('<div id="#tabs-' + acc.count +'></div>');
       acc.count += 1;
       acc.curEl = $newTab;
     } else if (d.code) {

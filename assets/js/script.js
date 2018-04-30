@@ -54,7 +54,7 @@ $(document).ready(() => {
   $(window).on('hashchange', urlRouteChanged);
 
   var $keycodesUI = $('#keycodes')
-  keycodes.reduce(createKeyCodeUI, { $el: $keycodesUI, $curEl: $keycodesUI, count: 1 });
+  keycodes.reduce(createKeyCodeUI, { $el: $keycodesUI, curEl: () => $keycodesUI, count: 1 });
   $keycodesUI.tabs();
 
   var $keycodes = $('.keycode'); // wait until they are created
@@ -493,7 +493,9 @@ $(document).ready(() => {
       var $ul = acc.$el.find('ul');
       $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
       acc.$el.append('<div id="#tabs-' + acc.count +'"></div>');
-      acc.$curEl = acc.$el.find('#tabs-'+acc.count);
+      acc.curEl = ((count) => {
+        return acc.$el.find('#tabs-'+count);
+      })(acc.count);
       acc.count += 1;
     } else if (d.code) {
       var keycode = $('<div>', {
@@ -503,9 +505,9 @@ $(document).ready(() => {
         html: d.name,
         title: d.title
       });
-      acc.$curEl.append(keycode);
+      acc.curEl().append(keycode);
     } else {
-      acc.$curEl.append(
+      acc.curEl().append(
         $('<div>', {
           class: 'space space-' + d.width,
           html: d.label

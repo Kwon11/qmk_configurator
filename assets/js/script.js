@@ -55,7 +55,7 @@ $(document).ready(() => {
 
   var $keycodesUI = $('#keycodes')
   keycodes.reduce(createKeyCodeUI, { $el: $keycodesUI, $curEl: $keycodesUI, count: 1 });
-  $keycodes.tabs();
+  $keycodesUI.tabs();
 
   var $keycodes = $('.keycode'); // wait until they are created
   $keycodes.each(makeDraggable);

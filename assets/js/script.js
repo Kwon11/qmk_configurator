@@ -1215,10 +1215,6 @@ $(document).ready(() => {
       { name: 'Home', code: 'KC_HOME', keys: 'home' },
       { name: 'Page Up', code: 'KC_PGUP', keys: 'pageup' },
       { width: 250 },
-      { name: 'Num Lock', code: 'KC_NLCK', keys: 'num' },
-      { name: '/', code: 'KC_PSLS', keys: 'num_divide' },
-      { name: '*', code: 'KC_PAST', keys: 'num_multiply' },
-      { name: '-', code: 'KC_PMNS', keys: 'num_subtract' },
       { width: 0 },
 
       { name: 'Tab', code: 'KC_TAB', keys: 'tab', width: 1500 },
@@ -1240,10 +1236,6 @@ $(document).ready(() => {
       { name: 'End', code: 'KC_END', keys: 'end' },
       { name: 'Page Down', code: 'KC_PGDN', keys: 'pagedown' },
       { width: 250 },
-      { name: '7', code: 'KC_P7', keys: 'num_7' },
-      { name: '8', code: 'KC_P8', keys: 'num_8' },
-      { name: '9', code: 'KC_P9', keys: 'num_9' },
-      { name: '+', code: 'KC_PPLS', keys: 'num_add' },
       { width: 0 },
 
       { name: 'Caps Lock', code: 'KC_CAPS', keys: 'caps_lock', width: 1750 },
@@ -1260,10 +1252,6 @@ $(document).ready(() => {
       { name: '"\n\'', code: 'KC_QUOT', keys: "'" },
       { name: 'Enter', code: 'KC_ENT', keys: 'enter', width: 2250 },
       { width: 3500 },
-      { name: '4', code: 'KC_P4', keys: 'num_4' },
-      { name: '5', code: 'KC_P5', keys: 'num_5' },
-      { name: '6', code: 'KC_P6', keys: 'num_6' },
-      { name: ',', code: 'KC_PCMM' },
       { width: 0 },
 
       { name: 'Left Shift', code: 'KC_LSFT', keys: 'shift', width: 2250 },
@@ -1300,6 +1288,24 @@ $(document).ready(() => {
       { name: 'Down', code: 'KC_DOWN', keys: 'down' },
       { name: 'Right', code: 'KC_RGHT', keys: 'right' },
       { width: 250 },
+
+      { label: 'Numpad', width: 'label' },
+
+      { name: 'Num Lock', code: 'KC_NLCK', keys: 'num' },
+      { name: '/', code: 'KC_PSLS', keys: 'num_divide' },
+      { name: '*', code: 'KC_PAST', keys: 'num_multiply' },
+      { name: '-', code: 'KC_PMNS', keys: 'num_subtract' },
+      { width: 0 },
+      { name: '7', code: 'KC_P7', keys: 'num_7' },
+      { name: '8', code: 'KC_P8', keys: 'num_8' },
+      { name: '9', code: 'KC_P9', keys: 'num_9' },
+      { name: '+', code: 'KC_PPLS', keys: 'num_add' },
+      { width: 0 },
+      { name: '4', code: 'KC_P4', keys: 'num_4' },
+      { name: '5', code: 'KC_P5', keys: 'num_5' },
+      { name: '6', code: 'KC_P6', keys: 'num_6' },
+      { name: ',', code: 'KC_PCMM' },
+      { width: 0 },
       { name: '0', code: 'KC_P0', width: 2000, keys: 'num_0' },
       { name: '.', code: 'KC_PDOT', keys: 'num_decimal' },
       { name: 'Enter', code: 'KC_PENT', keys: 'num_enter' },
@@ -1318,6 +1324,8 @@ $(document).ready(() => {
       { name: '한영', code: 'KC_HAEN' },
       { name: '変換', code: 'KC_HENK' },
       { name: 'かな', code: 'KC_KANA' },
+
+      { tab: 'QMK, Layers and Combos' },
 
       { label: 'QMK specific', width: 'label' },
 
@@ -1502,6 +1510,9 @@ $(document).ready(() => {
       },
       { name: 'LCA', code: 'LCA(kc)', type: 'container', title: 'LCTL + LALT' },
 
+
+      { tab: 'Mono' },
+
       { label: 'Alphabet', width: 'label' },
 
       { name: 'a', code: 'KC_A' },
@@ -1573,6 +1584,8 @@ $(document).ready(() => {
       { name: '?', code: 'KC_QUES', keys: '?' },
       { name: '"', code: 'KC_DQT', keys: '"' },
 
+      { tab: 'Application' },
+
       { label: 'Application', width: 'label' },
 
       { name: 'Vol Down', code: 'KC_VOLD' },
@@ -1612,6 +1625,8 @@ $(document).ready(() => {
       { name: 'Rev NKRO', code: 'MAGIC_UNHOST_NKRO' },
       { name: 'Rev A/O', code: 'MAGIC_UNSWAP_ALT_GUI' },
       { name: 'Togg NKRO', code: 'MAGIC_TOGGLE_NKRO' },
+
+      { tab: 'Backlight and RGB' },
 
       { label: 'Backlight settings', width: 'label' },
 

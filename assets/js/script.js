@@ -1362,7 +1362,7 @@ $(document).ready(() => {
       { name: '&nbsp;', code: 'KC_NO' },
       { name: '&nbsp;', code: 'KC_NO' },
       { name: '&nbsp;', code: 'KC_NO' },
-      { name: '&nbsp;', code: 'KC_NO', width: 1500 },
+      { name: 'ENTER', code: 'KC_ENTER', width: 1500 },
       { width: 250 },
       { name: '&nbsp;', code: 'KC_NO' },
       { name: '&nbsp;', code: 'KC_NO' },
@@ -1382,7 +1382,8 @@ $(document).ready(() => {
       { name: '&nbsp;', code: 'KC_NO' },
       { name: '&nbsp;', code: 'KC_NO' },
       { name: '&nbsp;', code: 'KC_NO' },
-      { name: '&nbsp;', code: 'KC_NO', width: 2250 },
+      { name: 'NUHS', code: 'KC_NUHS' },
+      { name: 'ENTER', code: 'KC_ENTER', width: 1250 },
       { width: 3500 },
       { width: 0 },
 

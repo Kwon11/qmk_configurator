@@ -53,8 +53,12 @@ $(document).ready(() => {
   var keycodes = getKeycodes();
   $(window).on('hashchange', urlRouteChanged);
 
-  var $keycodesUI = $('#keycodes')
-  keycodes.reduce(createKeyCodeUI, { $el: $keycodesUI, curEl: () => () => $keycodesUI, count: 1 });
+  var $keycodesUI = $('#keycodes');
+  keycodes.reduce(createKeyCodeUI, {
+    $el: $keycodesUI,
+    curEl: () => () => $keycodesUI,
+    count: 1
+  });
   $keycodesUI.tabs();
 
   var $keycodes = $('.keycode'); // wait until they are created
@@ -492,17 +496,17 @@ $(document).ready(() => {
     if (d.tab) {
       // generate a new TAB
       var $ul = acc.$el.find('ul');
-      $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
-      acc.$el.append('<div id="tabs-' + acc.count +'"></div>');
-      acc.curEl = ((count) => {
+      $ul.append('<li><a href="#tabs-' + acc.count + '">' + d.tab + '</a>');
+      acc.$el.append('<div id="tabs-' + acc.count + '"></div>');
+      acc.curEl = (count => {
         // we have to something like this because
         // the element doesn't exist yet
-        return () => acc.$el.find('#tabs-'+count);
+        return () => acc.$el.find('#tabs-' + count);
       })(acc.count);
       acc.count += 1;
     } else if (d.code) {
       // append a keycode
-      var title = d.title ? d.title + ' ' + d.code: d.code;
+      var title = d.title ? d.title + ' ' + d.code : d.code;
       var keycode = $('<div>', {
         class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
         'data-code': d.code,
@@ -1323,6 +1327,95 @@ $(document).ready(() => {
 
       { label: 'International', width: 'label' },
 
+      { name: '', code: '', keys: '`' },
+      { name: '', code: '', keys: '1' },
+      { name: '', code: '', keys: '2' },
+      { name: '', code: '', keys: '3' },
+      { name: '', code: '', keys: '4' },
+      { name: '', code: '', keys: '5' },
+      { name: '', code: '', keys: '6' },
+      { name: '', code: '', keys: '7' },
+      { name: '', code: '', keys: '8' },
+      { name: '', code: '', keys: '9' },
+      { name: '', code: '', keys: '0' },
+      { name: '', code: '', keys: '-' },
+      { name: '', code: '', keys: '=' },
+      { name: '', code: '', keys: 'backspace', width: 2000 },
+      { width: 250 },
+      { name: '', code: '', keys: 'insert' },
+      { name: '', code: '', keys: 'home' },
+      { name: '', code: '', keys: 'pageup' },
+      { width: 250 },
+      { width: 0 },
+
+      { name: '', code: '', width: 1500 },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', width: 1500 },
+      { width: 250 },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { name: '', code: '', },
+      { width: 250 },
+      { width: 0 },
+
+      { name: '', code: '', width: 1750 },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '', width: 2250 },
+      { width: 3500 },
+      { width: 0 },
+
+      { name: '', code: '', width: 2250 },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '', width: 2750 },
+      { width: 1250 },
+      { name: '', code: '' },
+      { width: 1250 },
+      { width: 0 },
+
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 6250 },
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 1250 },
+      { name: '', code: '', width: 1250 },
+      { width: 250 },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { name: '', code: '' },
+      { width: 250 },
+
       { name: 'NUHS', code: 'KC_NUHS' },
       { name: 'NUBS', code: 'KC_NUBS' },
 
@@ -1520,7 +1613,6 @@ $(document).ready(() => {
         title: 'LGUI + LSFT'
       },
       { name: 'LCA', code: 'LCA(kc)', type: 'container', title: 'LCTL + LALT' },
-
 
       { tab: 'Mono' },
 

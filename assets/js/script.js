@@ -1635,7 +1635,6 @@ $(document).ready(() => {
       { name: 'Vol -', code: 'KC_VOLD', title: 'Vol Down' },
       { name: 'Media Stop', code: 'KC_MSTP', title: 'Media Stop' },
       { name: 'Play', code: 'KC_MPLY', title: 'Play/Pause' },
-      { width:0},
 
       { label: 'Application', width: 'label' },
 

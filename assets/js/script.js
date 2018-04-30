@@ -492,7 +492,7 @@ $(document).ready(() => {
     if (d.tab) {
       var $ul = acc.$el.find('ul');
       $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
-      acc.$el.append('<div id="#tabs-' + acc.count +'"></div>');
+      acc.$el.append('<div id="tabs-' + acc.count +'"></div>');
       acc.curEl = ((count) => {
         return () => acc.$el.find('#tabs-'+count);
       })(acc.count);

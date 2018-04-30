@@ -490,14 +490,18 @@ $(document).ready(() => {
 
   function createKeyCodeUI(acc, d) {
     if (d.tab) {
+      // generate a new TAB
       var $ul = acc.$el.find('ul');
       $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
       acc.$el.append('<div id="tabs-' + acc.count +'"></div>');
       acc.curEl = ((count) => {
+        // we have to something like this because
+        // the element doesn't exist yet
         return () => acc.$el.find('#tabs-'+count);
       })(acc.count);
       acc.count += 1;
     } else if (d.code) {
+      // append a keycode
       var keycode = $('<div>', {
         class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
         'data-code': d.code,
@@ -507,6 +511,7 @@ $(document).ready(() => {
       });
       acc.curEl().append(keycode);
     } else {
+      // assume this is a width command which could generate a new label
       acc.curEl().append(
         $('<div>', {
           class: 'space space-' + d.width,
@@ -1312,6 +1317,8 @@ $(document).ready(() => {
       { name: '0', code: 'KC_P0', width: 2000, keys: 'num_0' },
       { name: '.', code: 'KC_PDOT', keys: 'num_decimal' },
       { name: 'Enter', code: 'KC_PENT', keys: 'num_enter' },
+
+      { tab: 'Intl' },
 
       { label: 'International', width: 'label' },
 

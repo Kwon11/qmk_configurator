@@ -53,10 +53,11 @@ $(document).ready(() => {
   var keycodes = getKeycodes();
   $(window).on('hashchange', urlRouteChanged);
 
-  var $keycodes = $('.keycode'); // wait until they are created
-  keycodes.reduce(createKeyCodeUI, { $el: $keycodes, $curEl: $keycodes, count: 1 });
+  var $keycodesUI = $('#keycodes')
+  keycodes.reduce(createKeyCodeUI, { $el: $keycodesUI, $curEl: $keycodesUI, count: 1 });
   $keycodes.tabs();
 
+  var $keycodes = $('.keycode'); // wait until they are created
   $keycodes.each(makeDraggable);
 
   // click to assign keys to keymap

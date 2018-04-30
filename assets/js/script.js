@@ -507,7 +507,7 @@ $(document).ready(() => {
         'data-code': d.code,
         'data-type': d.type,
         html: d.name,
-        title: d.title
+        title: d.title + ' ' + d.code
       });
       acc.curEl().append(keycode);
     } else {

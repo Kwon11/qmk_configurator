@@ -493,7 +493,7 @@ $(document).ready(() => {
       var $ul = acc.$el.find('ul');
       $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
       acc.$el.append('<div id="#tabs-' + acc.count +'"></div>');
-      acc.curEl = acc.$el.find('#tabs-'+acc.count);
+      acc.$curEl = acc.$el.find('#tabs-'+acc.count);
       acc.count += 1;
     } else if (d.code) {
       var keycode = $('<div>', {

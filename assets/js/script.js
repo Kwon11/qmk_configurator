@@ -492,9 +492,9 @@ $(document).ready(() => {
     if (d.tab) {
       var $ul = acc.$el.find('ul');
       $ul.append('<li><a href="#tabs-' + acc.count +'">'+d.tab+'</a>')
-      var $newTab = acc.$el.append('<div id="#tabs-' + acc.count +'"></div>');
+      acc.$el.append('<div id="#tabs-' + acc.count +'"></div>');
+      acc.curEl = acc.$el.find('#tabs-'+acc.count);
       acc.count += 1;
-      acc.curEl = $newTab;
     } else if (d.code) {
       var keycode = $('<div>', {
         class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
@@ -1269,10 +1269,6 @@ $(document).ready(() => {
       { width: 1250 },
       { name: 'Up', code: 'KC_UP', keys: 'up' },
       { width: 1250 },
-      { name: '1', code: 'KC_P1', keys: 'num_1' },
-      { name: '2', code: 'KC_P2', keys: 'num_2' },
-      { name: '3', code: 'KC_P3', keys: 'num_3' },
-      { name: '=', code: 'KC_PEQL' },
       { width: 0 },
 
       { name: 'Left Ctrl', code: 'KC_LCTL', keys: 'ctrl', width: 1250 },
@@ -1305,6 +1301,11 @@ $(document).ready(() => {
       { name: '5', code: 'KC_P5', keys: 'num_5' },
       { name: '6', code: 'KC_P6', keys: 'num_6' },
       { name: ',', code: 'KC_PCMM' },
+      { width: 0 },
+      { name: '1', code: 'KC_P1', keys: 'num_1' },
+      { name: '2', code: 'KC_P2', keys: 'num_2' },
+      { name: '3', code: 'KC_P3', keys: 'num_3' },
+      { name: '=', code: 'KC_PEQL' },
       { width: 0 },
       { name: '0', code: 'KC_P0', width: 2000, keys: 'num_0' },
       { name: '.', code: 'KC_PDOT', keys: 'num_decimal' },

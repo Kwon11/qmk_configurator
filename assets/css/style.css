@@ -721,7 +721,7 @@ button {
 }
 
 #layers {
-  column-count: 2;
+  column-count: 16;
   padding-right: 10px;
   background: #fff;
 }
@@ -730,10 +730,10 @@ button {
   border-left: 1px dashed #ccc;
   border-right: 1px dashed #ccc;
   content: '';
-  height: 250px;
+  height: 38px;
   position: absolute;
   left: 12px;
-  width: 38px;
+  width: 250px;
   z-index: -1;
 }
 
@@ -746,6 +746,7 @@ button {
   -webkit-box-sizing: border-box;
   border: 1px solid #ccc;
   display: flex;
+
   justify-content: space-around;
   align-items: center;
   line-height: 80%;
@@ -807,15 +808,6 @@ button {
   pointer-events: all;
 }
 
-/*
-.rigth-side:after {
-  content: ' ';
-  display: block;
-  height: 0;
-  clear: both;
-}
-*/
-
 #visual-keymap {
   background: #fff;
   border-radius: 5px;
@@ -827,15 +819,6 @@ button {
 #visual-keymap {
   position: relative;
 }
-
-/*
-#visual-keymap:after {
-  content: ' ';
-  display: block;
-  height: 0;
-  clear: both;
-}
-*/
 
 .key {
   border: #ccc 1px solid;
@@ -948,9 +931,9 @@ button {
 }
 
 .keycode {
-  width: 32px;
-  height: 32px;
-  margin: 0px 5px 5px 0px;
+  width: 24px;
+  height: 24px;
+  margin: 0px 2.5px 2.5px 0px;
   border: #ccc 1px solid;
   border-radius: 2px;
   box-sizing: border-box;
@@ -977,10 +960,6 @@ button {
   cursor: -moz-grabbing;
   cursor: -webkit-grabbing;
   z-index: 1001;
-  /*opacity: .5;
-  -moz-transform: scale(.8);
-  -webkit-transform: scale(.8);
-  transform: scale(.8);*/
 }
 
 .keycode:empty:after {
@@ -1045,9 +1024,13 @@ button {
   border: solid 2px green;
 }
 
+.ui-tabs .ui-tabs-panel {
+  padding: 0.5em 0.5em;
+}
+
 .space {
-  height: 32px;
-  margin: 0px 5px 5px 0px;
+  height: 24px;
+  margin: 0px 2.5px 2.5px 0px;
   box-sizing: border-box;
   display: flex;
   justify-content: space-around;
@@ -1147,23 +1130,27 @@ input[type='number'] {
   justify-self: end;
 }
 
-.qmkc-app {
-  display: grid;
-  width: 100%;
-  height: 768px;
-  grid-column-gap: 15px;
-  grid-template:
-    1fr
-    90px
-    1fr / 64px 1fr 1fr;
-  grid-template-areas:
-   'qmkc-layers  qmkc-keymap  qmkc-keycodes'
-   'qmkc-control qmkc-control qmkc-keycodes'
-   'qmkc-console qmkc-console qmkc-keycodes';
-}
+  .qmkc-app {
+    display: grid;
+    max-width: 1300px;
+    height: 720px;
+    grid-column-gap: 15px;
+    grid-template:
+      64px
+      minmax(270px,300px)
+      110px
+      1fr / 1fr 1fr;
+    grid-template-areas:
+     'qmkc-layers  qmkc-keycodes'
+     'qmkc-keymap  qmkc-keycodes'
+     'qmkc-control qmkc-keycodes'
+     'qmkc-console qmkc-keycodes';
+  }
 
 .qmkc-layers {
   grid-area: qmkc-layers;
+  justify-self: start;
+  align-self: start;
 }
 
 .qmkc-keymap {
@@ -1173,6 +1160,9 @@ input[type='number'] {
 
 .qmkc-keycodes {
   grid-area: qmkc-keycodes;
+  grid-row: span 4;
+  justify-self: stretch;
+  align-self: stretch;
 }
 
 .qmkc-console {

@@ -17,7 +17,7 @@ $(document).ready(() => {
     `${backend_keyboards_url}/<%= keyboard %>/readme`
   );
   var defaults = {
-    MAX_X: 775,
+    MAX_X: 700,
     KEY_WIDTH: 40,
     KEY_HEIGHT: 40,
     SWAP_KEY_WIDTH: 30,

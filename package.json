@@ -11,5 +11,8 @@
     "commas": false,
     "singleQuote": true
   },
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "build": "rollup assets/js/main.js -o assets/js/script.js -f iife"
+  }
 }

@@ -41,6 +41,7 @@ $(document).ready(() => {
   var $import = $('#import');
   var $loadDefault = $('#load-default');
   var $fileImport = $('#fileImport');
+  var $infoPreview = $('#infoPreview');
   var $status = $('#status');
   var $visualKeymap = $('#visual-keymap');
 
@@ -100,7 +101,12 @@ $(document).ready(() => {
   $loadDefault.click(checkIsDirty(loadDefault));
 
   //Import function that takes in a JSON file reads it and loads the keyboard, layout and keymap data
-  $fileImport.change(importJSON);
+  $fileImport.change(() => {
+    var files = $fileImport[0].files;
+    importJSON(files);
+    // clear value between loads otherwise chrome caches
+    $fileImport[0].value = '';
+  });
 
   // explicitly export functions to global namespace
   window.setSelectWidth = setSelectWidth;
@@ -112,6 +118,15 @@ $(document).ready(() => {
 
   var keypressListener = new window.keypress.Listener();
   keypressListener.register_many(generateKeypressCombos(keycodes));
+  keypressListener.simple_combo('ctrl shift i', () => {
+    $('#infoPreview').click();
+  })
+  $infoPreview.change(() => {
+    var files = $infoPreview[0].files;
+    previewInfo(files)
+    // clear value between loads otherwise chrome caches
+    $infoPreview[0].value = '';
+  });
 
   var ignoreKeypressListener = _.partial(
     ignoreKeypressListener,
@@ -310,9 +325,41 @@ $(document).ready(() => {
     $('#keymap-name').val(name.replace(/\s/g, '_'));
   }
 
-  function importJSON() {
-    var files = $fileImport[0].files;
+  function previewInfo(files) {
+    var reader = new FileReader();
+    reader.onload = function layoutLoaded(/*e*/) {
+      var jsonText = reader.result;
+      var data;
+      try {
+        data = JSON.parse(jsonText);
+      } catch (error) {
+        console.log(error);
+        alert("Sorry, that doesn't appear to be a valid QMK info file.");
+      }
 
+      reset_keymap();
+
+      keyboard = data.keyboard_name;
+      $keyboard.val(keyboard);
+      setSelectWidth($keyboard);
+      load_layouts($keyboard.val(), data).then(() => {
+        setSelectWidth($('#layout'));
+        layout = _.first(_.keys(data.layouts));
+        $layout.val(layout);
+        switchKeyboardLayout();
+
+        setKeymapName('info.json preview');
+
+        load_converted_keymap(data.layers);
+
+        render_layout($layout.val());
+        viewReadme();
+      });
+    };
+    reader.readAsText(files[0]);
+  }
+
+  function importJSON(files) {
     var reader = new FileReader();
 
     reader.onload = function layoutLoaded(/*e*/) {
@@ -566,31 +613,30 @@ $(document).ready(() => {
     viewReadme();
   }
 
-  function load_layouts(_keyboard) {
+  function load_layouts(_keyboard, preview) {
     return $.get(backend_keyboards_url + '/' + _keyboard, function(data) {
       if (data.keyboards[_keyboard]) {
+        if (!_.isUndefined(preview)) {
+          data.keyboards[_keyboard] = preview;
+        }
         $layout.find('option').remove();
-        layouts = {};
-        $.each(data.keyboards[_keyboard].layouts, function(k, d) {
+        layouts = _.reduce(data.keyboards[_keyboard].layouts, function(acc, _layout, key) {
           $layout.append(
             $('<option>', {
-              value: k,
-              text: k
+              value: key,
+              text: key
             })
           );
-          if (d.layout) {
-            layouts[k] = d.layout;
-          } else {
-            layouts[k] = d;
-          }
-        });
+          acc[key] = _layout.layout ? _layout.layout : _layout;
+          return acc
+        }, {});
 
         if (layout_from_hash()) {
           $layout.val(layout_from_hash());
         }
         changeLayout();
-        setSelectWidth($('#layout'));
-        render_layout($('#layout').val());
+        setSelectWidth($layout);
+        render_layout($layout.val());
       }
     });
   }

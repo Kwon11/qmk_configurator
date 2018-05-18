@@ -1,9 +1,9 @@
 title: QMK Configurator
-email: hello@qmk.fm
+email: yanfali@gmail.com
 show_downloads: true
-description: QMK for potatoes - an open source configurator for QMK Firmware (only the AVR boards right now)
-baseurl: ""
-url: "http://config.qmk.fm"
-github_username: qmk
-repository: qmk/qmk_configurator
+description: An open source firmware for AVR and ARM based keyboards
+baseurl: "/qmk_configurator"
+url: "http://yanfali.github.io"
+github_username: yanfali
+repository: yanfali/qmk_configurator
 theme: jekyll-theme-minimal

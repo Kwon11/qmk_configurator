@@ -463,7 +463,6 @@ $(document).ready(() => {
     $status.html(''); // clear the DOM not the value otherwise weird things happen
     myKeymap.clearDirty();
     disableOtherButtons();
-    // load_layouts($keyboard).val());
   }
 
   function createKeyboardDropdown(data) {
@@ -480,7 +479,6 @@ $(document).ready(() => {
       $keyboard.val(keyboard_from_hash());
     }
     setSelectWidth($keyboard);
-    load_layouts($keyboard.val());
   }
 
   function makeDraggable(k, d) {
@@ -567,7 +565,7 @@ $(document).ready(() => {
   }
 
   function load_layouts(_keyboard) {
-    return $.get(backend_keyboards_url + '/' + _keyboard, function(data) {
+    return $.get(`${backend_keyboards_url}/${_keyboard}/keymaps/all`, function(data) {
       if (data.keyboards[_keyboard]) {
         $layout.find('option').remove();
         layouts = {};

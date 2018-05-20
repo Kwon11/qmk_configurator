@@ -565,7 +565,9 @@ $(document).ready(() => {
   }
 
   function load_layouts(_keyboard) {
-    return $.get(`${backend_keyboards_url}/${_keyboard}/keymaps/all`, function(data) {
+    return $.get(`${backend_keyboards_url}/${_keyboard}/keymaps/all`, function(
+      data
+    ) {
       if (data.keyboards[_keyboard]) {
         $layout.find('option').remove();
         layouts = {};
@@ -589,6 +591,29 @@ $(document).ready(() => {
         changeLayout();
         setSelectWidth($('#layout'));
         render_layout($('#layout').val());
+
+        var keyboardMetadata = data.keyboards[_keyboard];
+        if (keyboardMetadata.keymaps && keyboardMetadata.keymaps.default) {
+          var defKeymap = keyboardMetadata.keymaps.default;
+          if (
+            defKeymap.layout_macro &&
+            defKeymap.layers &&
+            defKeymap.layers.length > 0 &&
+            _.first(defKeymap.layers).length > 0
+          ) {
+            let macro = _.isUndefined(
+              keyboardMetadata.layouts[defKeymap.layout_macro]
+            )
+              ? 'KEYMAP'
+              : defKeymap.layout_macro;
+            $layout.val(macro);
+            changeLayout();
+            setTimeout(() => {
+              load_converted_keymap(defKeymap.layers);
+              render_layout($layout.val());
+            }, 1000)
+          }
+        }
       }
     });
   }
@@ -966,7 +991,7 @@ $(document).ready(() => {
         var srcKeycode = ui.helper[0];
         $(srcKeycode).draggable('option', 'revertDuration', 0);
         $target.removeClass('active-key');
-        setLayerToNonEmpty('active')
+        setLayerToNonEmpty('active');
         if ($(srcKeycode).hasClass('keycode')) {
           $(t).attr('data-code', srcKeycode.dataset.code);
           // $(t).draggable({revert: true, revertDuration: 100});
@@ -1664,10 +1689,14 @@ $(document).ready(() => {
         // layer 0 is always initialized. Use it as a reference
         let { name, code } = lookupKeycode('KC_NO');
         let KC_NO = { name, code };
-        instance.km[__layer] = _.reduce(instance.km[0], (acc, key, index) => {
-          acc[index] = KC_NO;
-          return acc;
-        }, {});
+        instance.km[__layer] = _.reduce(
+          instance.km[0],
+          (acc, key, index) => {
+            acc[index] = KC_NO;
+            return acc;
+          },
+          {}
+        );
       } else {
         instance.km[__layer] = {};
       }

@@ -161,7 +161,7 @@ $(document).ready(() => {
       template: `
         <div class="backend-status">
           <div class="bes-title">Server Status:</div>
-          <div class="bes-status">{{status}}</div>
+          <div :class="{ 'bes-status': true, 'bes-error': hasError }">{{status}}</div>
           <div class="bes-version">API Version: <span class="version-num">{{version}}</div>
           <div class="bes-jobs">{{jobs}}</div>
         </div>`,

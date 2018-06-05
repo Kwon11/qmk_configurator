@@ -147,7 +147,12 @@ $(document).ready(() => {
 
   ignoreKeypressListener($('input[type=text]'));
 
-  var statusVue = checkStatus();
+  var vueStatus = checkStatus();
+  controllerComponent();
+  var vueStore = new Vuex.Store({
+    state: {},
+    mutations: {}
+  });
   return;
 
   ////////////////////////////////////////
@@ -155,6 +160,67 @@ $(document).ready(() => {
   // Implementation goes here
   //
   ////////////////////////////////////////
+
+  function controllerComponent() {
+    let controllerTop = Vue.component('controller-top', {
+      template: `
+  <div id="controller-top">
+    <div class="topctrl">
+      <span class="topctrl-1">
+      <label style="display: inline-block; width: 75px;" >Keyboard:</label>
+      <select id="keyboard" v-bind:style="width" v-model="keyboard" on>
+        <option v-for='keeb in keyboards' v-bind:value="keeb">{{keeb}}</option>
+      </select>
+      </span>
+      <span class="topctrl-2">
+        <label id="keymap-name-label">Keymap Name:</label>
+        <input id="keymap-name" type="text" value="mine" />
+      </span>
+      <span class="topctrl-3">
+      <button id="load-default" title="Load default keymap from QMK Firmware">Load Default</button>
+      <button id="compile" title="Compile keymap">Compile</button>
+      </span>
+    </div>
+    <label style="display: inline-block; width: 75px;">Layout:</label>
+    <select id="layout" onChange="setSelectWidth(this);"></select>
+  </div>
+      `,
+      methods: {
+        fetchKeyboards() {
+          axios.get(backend_keyboards_url).then(this.createKeyboardDropdown);
+        },
+        createKeyboardDropdown({ data, status }) {
+          if (status === 200) {
+            this.keyboards = data;
+            this.keyboard = _.first(this.keyboards);
+          }
+          /*
+          if (keyboard_from_hash()) {
+            $keyboard.val(keyboard_from_hash());
+          }
+          */
+          //load_layouts($keyboard.val());
+        },
+      },
+      data: () => {
+        return {
+          keyboards: [],
+          keyboard: '',
+          width: 0,
+          selected: '',
+        };
+      },
+      mounted() {
+        this.fetchKeyboards();
+      }
+    });
+
+    return new Vue({
+      el: '#controller-app',
+      template: '<div><controllerTop></controllerTop></div>',
+      components: { controllerTop }
+    });
+  }
 
   function checkStatus() {
     let statusBar = Vue.component('status-bar', {
@@ -197,7 +263,7 @@ $(document).ready(() => {
           status: 'Checking',
           version: '0.1',
           jobs: '...',
-          hasError: false,
+          hasError: false
         };
       },
       mounted() {

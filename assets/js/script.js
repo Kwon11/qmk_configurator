@@ -54,7 +54,7 @@ $(document).ready(() => {
   var viewReadme = _.debounce(viewReadme, 500);
 
   var keycodes = getKeycodes();
-//  $(window).on('hashchange', urlRouteChanged);
+  //  $(window).on('hashchange', urlRouteChanged);
 
   $.each(keycodes, createKeyCodeUI);
 
@@ -147,12 +147,13 @@ $(document).ready(() => {
 
   ignoreKeypressListener($('input[type=text]'));
 
-  Vue.use(Vuex);
-
   var vueStatus = checkStatus();
 
+  Vue.use(VueRouter);
+  Vue.use(Vuex);
+
   var vueStore = newStore();
-  var App = newApp();
+  var App = newApp(vueStore);
   var vueRouter = new VueRouter({
     routes: [
       { path: '/:keyboardP/:layoutP', component: App },
@@ -162,8 +163,8 @@ $(document).ready(() => {
   });
 
   var vueInstance = new Vue({
+    store: vueStore,
     router: vueRouter,
-    store: vueStore
   }).$mount('#controller-app');
   return;
 
@@ -173,11 +174,12 @@ $(document).ready(() => {
   //
   ////////////////////////////////////////
 
-  function newApp() {
-    var controllerTop = controllerComponent(vueStore);
+  function newApp(store) {
+    var controllerTop = controllerComponent(store);
     return Vue.component('controller', {
+      store,
       template: '<div><controllerTop></controllerTop></div>',
-      components: { controllerTop }
+      components: { controllerTop },
     });
   }
   function newStore() {
@@ -185,16 +187,49 @@ $(document).ready(() => {
       namespaced: true,
       state: {
         keyboard: '',
-        layout: ''
+        layout: '',
+        layouts: {}
       },
       getters: {
         keyboard: state => state.keyboard,
         layout: state => state.layout
       },
-      actions: {},
+      actions: {
+        loadLayouts({ commit, state }, preview) {
+          if (!_.isUndefined(preview)) {
+            let p = new Promise(resolve => {
+              let fake = {
+                keyboards: {}
+              };
+              fake.keyboards[state.keyboard] = preview;
+              commit('processInfoJSON', fake);
+              resolve(preview);
+            });
+            return p;
+          }
+          debugger;
+          return axios
+            .get(backend_keyboards_url + '/' + state.keyboard)
+            .then(data => commit('processInfoJSON', data));
+        }
+      },
       mutations: {
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
+        },
+        processInfoJSON(state, { keyboards }) {
+          if (keyboards[state.keyboard]) {
+            state.layouts = _.reduce(
+              keyboards[state.keyboard].layouts,
+              function(acc, _layout, key) {
+                acc[key] = _layout.layout ? _layout.layout : _layout;
+                return acc;
+              },
+              {}
+            );
+            return state.layouts;
+          }
+          return {};
         }
       }
     };
@@ -232,7 +267,8 @@ $(document).ready(() => {
   </div>
       `,
       computed: {
-        keyboard: () => store.getters['appStore/keyboard']
+        keyboard: () => store.getters['appStore/keyboard'],
+        layouts: () => store.getters['appStore/layouts']
       },
       methods: {
         fetchKeyboards() {
@@ -245,11 +281,11 @@ $(document).ready(() => {
             _keyboard = _.first(this.keyboards);
           }
           let { keyboardP } = this.$route.params;
-          if (_.isString(keyboardP) && keyboardP !== '' ) {
+          if (_.isString(keyboardP) && keyboardP !== '') {
             _keyboard = keyboardP;
           }
           store.commit('appStore/setKeyboard', _keyboard);
-          //load_layouts($keyboard.val());
+          //store.commit('appStore/load_layouts');
         }
       },
       data: () => {

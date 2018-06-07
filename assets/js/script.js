@@ -54,7 +54,7 @@ $(document).ready(() => {
   var viewReadme = _.debounce(viewReadme, 500);
 
   var keycodes = getKeycodes();
-  $(window).on('hashchange', urlRouteChanged);
+//  $(window).on('hashchange', urlRouteChanged);
 
   $.each(keycodes, createKeyCodeUI);
 
@@ -155,7 +155,8 @@ $(document).ready(() => {
   var App = newApp();
   var vueRouter = new VueRouter({
     routes: [
-      { path: '/:keyboard/:layout', component: App },
+      { path: '/:keyboardP/:layoutP', component: App },
+      { path: '/:keyboardP', component: App },
       { path: '/', component: App }
     ]
   });
@@ -243,12 +244,11 @@ $(document).ready(() => {
             this.keyboards = data;
             _keyboard = _.first(this.keyboards);
           }
-          store.commit('appStore/setKeyboard', _keyboard);
-          /*
-          if (keyboard_from_hash()) {
-            $keyboard.val(keyboard_from_hash());
+          let { keyboardP } = this.$route.params;
+          if (_.isString(keyboardP) && keyboardP !== '' ) {
+            _keyboard = keyboardP;
           }
-          */
+          store.commit('appStore/setKeyboard', _keyboard);
           //load_layouts($keyboard.val());
         }
       },

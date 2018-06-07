@@ -147,12 +147,49 @@ $(document).ready(() => {
 
   ignoreKeypressListener($('input[type=text]'));
 
-  var vueStatus = checkStatus();
-  controllerComponent();
+  Vue.use(Vuex);
+
+  var appStore = {
+    namespaced: true,
+    state: {
+      keyboard: '',
+      layout: ''
+    },
+    getters: {
+      keyboard: state => state.keyboard,
+      layout: state => state.layout
+    },
+    actions: {},
+    mutations: {
+      setKeyboard(state, _keyboard) {
+        state.keyboard = _keyboard;
+      }
+    }
+  };
+
   var vueStore = new Vuex.Store({
-    state: {},
-    mutations: {}
+    modules: {
+      appStore
+    },
+    strict: true
   });
+  var vueStatus = checkStatus();
+  var controllerTop = controllerComponent(vueStore);
+  var App = Vue.component('controller', {
+    template: '<div><controllerTop></controllerTop></div>',
+    components: { controllerTop },
+  });
+  var vueRouter = new VueRouter({
+    routes: [
+      { path: '/:keyboard/:layout', component: App },
+      { path: '/', component: App },
+    ]
+  });
+
+  var vueInstance = new Vue({
+    router: vueRouter,
+    store: vueStore,
+  }).$mount('#controller-app');
   return;
 
   ////////////////////////////////////////
@@ -161,8 +198,8 @@ $(document).ready(() => {
   //
   ////////////////////////////////////////
 
-  function controllerComponent() {
-    let controllerTop = Vue.component('controller-top', {
+  function controllerComponent(store) {
+    return Vue.component('controller-top', {
       template: `
   <div id="controller-top">
     <div class="topctrl">
@@ -185,40 +222,38 @@ $(document).ready(() => {
     <select id="layout" onChange="setSelectWidth(this);"></select>
   </div>
       `,
+      computed: {
+        keyboard: () => store.getters['appStore/keyboard']
+      },
       methods: {
         fetchKeyboards() {
           axios.get(backend_keyboards_url).then(this.createKeyboardDropdown);
         },
         createKeyboardDropdown({ data, status }) {
+          let _keyboard = '';
           if (status === 200) {
             this.keyboards = data;
-            this.keyboard = _.first(this.keyboards);
+            _keyboard = _.first(this.keyboards);
           }
+          store.commit('appStore/setKeyboard', _keyboard);
           /*
           if (keyboard_from_hash()) {
             $keyboard.val(keyboard_from_hash());
           }
           */
           //load_layouts($keyboard.val());
-        },
+        }
       },
       data: () => {
         return {
           keyboards: [],
-          keyboard: '',
           width: 0,
-          selected: '',
+          selected: ''
         };
       },
       mounted() {
         this.fetchKeyboards();
       }
-    });
-
-    return new Vue({
-      el: '#controller-app',
-      template: '<div><controllerTop></controllerTop></div>',
-      components: { controllerTop }
     });
   }
 

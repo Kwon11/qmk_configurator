@@ -149,46 +149,20 @@ $(document).ready(() => {
 
   Vue.use(Vuex);
 
-  var appStore = {
-    namespaced: true,
-    state: {
-      keyboard: '',
-      layout: ''
-    },
-    getters: {
-      keyboard: state => state.keyboard,
-      layout: state => state.layout
-    },
-    actions: {},
-    mutations: {
-      setKeyboard(state, _keyboard) {
-        state.keyboard = _keyboard;
-      }
-    }
-  };
-
-  var vueStore = new Vuex.Store({
-    modules: {
-      appStore
-    },
-    strict: true
-  });
   var vueStatus = checkStatus();
-  var controllerTop = controllerComponent(vueStore);
-  var App = Vue.component('controller', {
-    template: '<div><controllerTop></controllerTop></div>',
-    components: { controllerTop },
-  });
+
+  var vueStore = newStore();
+  var App = newApp();
   var vueRouter = new VueRouter({
     routes: [
       { path: '/:keyboard/:layout', component: App },
-      { path: '/', component: App },
+      { path: '/', component: App }
     ]
   });
 
   var vueInstance = new Vue({
     router: vueRouter,
-    store: vueStore,
+    store: vueStore
   }).$mount('#controller-app');
   return;
 
@@ -197,6 +171,40 @@ $(document).ready(() => {
   // Implementation goes here
   //
   ////////////////////////////////////////
+
+  function newApp() {
+    var controllerTop = controllerComponent(vueStore);
+    return Vue.component('controller', {
+      template: '<div><controllerTop></controllerTop></div>',
+      components: { controllerTop }
+    });
+  }
+  function newStore() {
+    var appStore = {
+      namespaced: true,
+      state: {
+        keyboard: '',
+        layout: ''
+      },
+      getters: {
+        keyboard: state => state.keyboard,
+        layout: state => state.layout
+      },
+      actions: {},
+      mutations: {
+        setKeyboard(state, _keyboard) {
+          state.keyboard = _keyboard;
+        }
+      }
+    };
+
+    return new Vuex.Store({
+      modules: {
+        appStore
+      },
+      strict: true
+    });
+  }
 
   function controllerComponent(store) {
     return Vue.component('controller-top', {
@@ -263,7 +271,7 @@ $(document).ready(() => {
         <div class="backend-status">
           <div class="bes-title">Server Status:</div>
           <div :class="{ 'bes-status': true, 'bes-error': hasError }">{{status}}</div>
-          <div class="bes-version">API Version: <span class="version-num">{{version}}</div>
+          <div class="bes-version">API Version: <span class="version-num">{{version}}</span></div>
           <div class="bes-jobs">{{jobs}}</div>
         </div>`,
       methods: {

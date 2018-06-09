@@ -191,18 +191,25 @@ $(document).ready(() => {
       namespaced: true,
       state: {
         keyboard: '',
+        keyboards: [],
         layout: '',
-        layouts: {},
+        layouts: {}
       },
       getters: {
         keyboard: state => state.keyboard,
+        keyboards: state => state.keyboards,
         layout: state => state.layout,
-        layouts: state => state.layouts,
+        layouts: state => state.layouts
       },
       actions: {
         changeKeyboard({ commit, dispatch }, _keyboard) {
-          commit('setKeyboard', _keyboard);
-          dispatch('loadLayouts');
+          let promise = new Promise(resolve => {
+            commit('setKeyboard', _keyboard);
+            dispatch('loadLayouts').then(() => {
+              resolve();
+            });
+          });
+          return promise;
         },
         loadLayouts({ commit, state }, preview) {
           if (!_.isUndefined(preview)) {
@@ -218,12 +225,18 @@ $(document).ready(() => {
           }
           return axios
             .get(backend_keyboards_url + '/' + state.keyboard)
-            .then(resp => commit('processInfoJSON', resp));
+            .then(resp => {
+              commit('processInfoJSON', resp);
+              return resp;
+            });
         }
       },
       mutations: {
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
+        },
+        setKeyboards(state, _keyboards) {
+          state.keyboards = _keyboards;
         },
         setLayout(state, _layout) {
           state.layout = _layout;
@@ -240,6 +253,7 @@ $(document).ready(() => {
                 },
                 {}
               );
+              state.layout = _.first(_.keys(state.layouts));
               return state.layouts;
             }
             return {};
@@ -284,8 +298,9 @@ $(document).ready(() => {
       `,
       computed: {
         keyboard: () => store.getters['appStore/keyboard'],
+        keyboards: () => store.getters['appStore/keyboards'],
         layout: () => store.getters['appStore/layout'],
-        layouts: () => store.getters['appStore/layouts'],
+        layouts: () => store.getters['appStore/layouts']
       },
       methods: {
         fetchKeyboards() {
@@ -294,17 +309,22 @@ $(document).ready(() => {
         createKeyboardDropdown({ data, status }) {
           let _keyboard = '';
           if (status === 200) {
-            this.keyboards = data;
+            store.commit('appStore/setKeyboards', data);
             _keyboard = _.first(this.keyboards);
           }
           let { keyboardP } = this.$route.params;
           if (_.isString(keyboardP) && keyboardP !== '') {
             _keyboard = keyboardP;
           }
-          store.dispatch('appStore/changeKeyboard', _keyboard);
+          store.dispatch('appStore/changeKeyboard', _keyboard).then(() => {
+            // do something
+            this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+          });
         },
         updateKeyboard(e) {
-          store.dispatch('appStore/changeKeyboard', e.target.value);
+          store.dispatch('appStore/changeKeyboard', e.target.value).then(() => {
+            this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+          });
         },
         updateLayout(e) {
           store.commit('appStore/setLayout', e.target.value);
@@ -312,7 +332,6 @@ $(document).ready(() => {
       },
       data: () => {
         return {
-          keyboards: [],
           width: 0,
           selected: ''
         };

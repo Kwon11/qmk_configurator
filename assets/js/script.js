@@ -65,7 +65,7 @@ $(document).ready(() => {
   $visualKeymap.click(selectKeymapKey);
   $('#keycodes').click(assignKeycodeToSelectedKey);
 
-  var promise = $.get(backend_keyboards_url, createKeyboardDropdown);
+  //  var promise = $.get(backend_keyboards_url, createKeyboardDropdown);
 
   /*
   $keyboard.change(
@@ -114,10 +114,12 @@ $(document).ready(() => {
   // explicitly export functions to global namespace
   window.setSelectWidth = setSelectWidth;
 
+  /*
   promise.then(() => {
     // wait until keyboard list has loaded before checking url hash
     urlRouteChanged();
   });
+  */
 
   var keypressListener = new window.keypress.Listener();
   keypressListener.register_many(generateKeypressCombos(keycodes));
@@ -166,7 +168,7 @@ $(document).ready(() => {
 
   var vueInstance = new Vue({
     store: vueStore,
-    router: vueRouter,
+    router: vueRouter
   }).$mount('#controller-app');
   return;
 
@@ -181,7 +183,7 @@ $(document).ready(() => {
     return Vue.component('controller', {
       store,
       template: '<div><controllerTop></controllerTop></div>',
-      components: { controllerTop },
+      components: { controllerTop }
     });
   }
   function newStore() {
@@ -190,13 +192,18 @@ $(document).ready(() => {
       state: {
         keyboard: '',
         layout: '',
-        layouts: {}
+        layouts: {},
       },
       getters: {
         keyboard: state => state.keyboard,
-        layout: state => state.layout
+        layout: state => state.layout,
+        layouts: state => state.layouts,
       },
       actions: {
+        changeKeyboard({ commit, dispatch }, _keyboard) {
+          commit('setKeyboard', _keyboard);
+          dispatch('loadLayouts');
+        },
         loadLayouts({ commit, state }, preview) {
           if (!_.isUndefined(preview)) {
             let p = new Promise(resolve => {
@@ -209,29 +216,34 @@ $(document).ready(() => {
             });
             return p;
           }
-          debugger;
           return axios
             .get(backend_keyboards_url + '/' + state.keyboard)
-            .then(data => commit('processInfoJSON', data));
+            .then(resp => commit('processInfoJSON', resp));
         }
       },
       mutations: {
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
         },
-        processInfoJSON(state, { keyboards }) {
-          if (keyboards[state.keyboard]) {
-            state.layouts = _.reduce(
-              keyboards[state.keyboard].layouts,
-              function(acc, _layout, key) {
-                acc[key] = _layout.layout ? _layout.layout : _layout;
-                return acc;
-              },
-              {}
-            );
-            return state.layouts;
+        setLayout(state, _layout) {
+          state.layout = _layout;
+        },
+        processInfoJSON(state, resp) {
+          if (resp.status === 200) {
+            let _layouts = resp.data.keyboards[state.keyboard].layouts;
+            if (_layouts) {
+              state.layouts = _.reduce(
+                _layouts,
+                function(acc, _layout, key) {
+                  acc[key] = _layout.layout ? _layout.layout : _layout;
+                  return acc;
+                },
+                {}
+              );
+              return state.layouts;
+            }
+            return {};
           }
-          return {};
         }
       }
     };
@@ -265,12 +277,15 @@ $(document).ready(() => {
       </span>
     </div>
     <label style="display: inline-block; width: 75px;">Layout:</label>
-    <select id="layout" onChange="setSelectWidth(this);"></select>
+    <select id="layout" @change="updateLayout">
+        <option v-for='(aLayout, layoutName) in layouts' v-bind:value="layoutName">{{layoutName}}</option>
+    </select>
   </div>
       `,
       computed: {
         keyboard: () => store.getters['appStore/keyboard'],
-        layouts: () => store.getters['appStore/layouts']
+        layout: () => store.getters['appStore/layout'],
+        layouts: () => store.getters['appStore/layouts'],
       },
       methods: {
         fetchKeyboards() {
@@ -286,11 +301,13 @@ $(document).ready(() => {
           if (_.isString(keyboardP) && keyboardP !== '') {
             _keyboard = keyboardP;
           }
-          store.commit('appStore/setKeyboard', _keyboard);
-          //store.commit('appStore/load_layouts');
+          store.dispatch('appStore/changeKeyboard', _keyboard);
         },
         updateKeyboard(e) {
-          store.commit('appStore/setKeyboard', e.target.value);
+          store.dispatch('appStore/changeKeyboard', e.target.value);
+        },
+        updateLayout(e) {
+          store.commit('appStore/setLayout', e.target.value);
         }
       },
       data: () => {

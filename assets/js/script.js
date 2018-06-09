@@ -160,8 +160,7 @@ $(document).ready(() => {
   var App = newApp(vueStore);
   var vueRouter = new VueRouter({
     routes: [
-      { path: '/:keyboardP/:layoutP', component: App },
-      { path: '/:keyboardP', component: App },
+      { path: '/:keyboardP(.+)/:layoutP(.+)', component: App },
       { path: '/', component: App }
     ]
   });

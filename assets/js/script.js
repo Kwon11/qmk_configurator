@@ -67,11 +67,13 @@ $(document).ready(() => {
 
   var promise = $.get(backend_keyboards_url, createKeyboardDropdown);
 
+  /*
   $keyboard.change(
     checkIsDirty(switchKeyboardLayout, () =>
       $keyboard.val(keyboard_from_hash())
     )
   );
+  */
 
   $layout.change(
     checkIsDirty(changeLayout, () => $layout.val(layout_from_hash()))
@@ -249,7 +251,7 @@ $(document).ready(() => {
     <div class="topctrl">
       <span class="topctrl-1">
       <label style="display: inline-block; width: 75px;" >Keyboard:</label>
-      <select id="keyboard" v-bind:style="width" v-model="keyboard" on>
+      <select id="keyboard" v-bind:style="width" @change="updateKeyboard">
         <option v-for='keeb in keyboards' v-bind:value="keeb">{{keeb}}</option>
       </select>
       </span>
@@ -286,6 +288,9 @@ $(document).ready(() => {
           }
           store.commit('appStore/setKeyboard', _keyboard);
           //store.commit('appStore/load_layouts');
+        },
+        updateKeyboard(e) {
+          store.commit('appStore/setKeyboard', e.target.value);
         }
       },
       data: () => {

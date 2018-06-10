@@ -36,12 +36,12 @@ $(document).ready(() => {
   var $keyboard = $('#keyboard');
   var $layout = $('#layout');
   var $layer = $('.layer');
-  var $compile = $('#compile');
+//  var $compile = $('#compile');
   var $fwFile = $('#fwFile');
   var $source = $('#source');
   var $export = $('#export');
   var $import = $('#import');
-  var $loadDefault = $('#load-default');
+//  var $loadDefault = $('#load-default');
   var $fileImport = $('#fileImport');
   var $infoPreview = $('#infoPreview');
   var $status = $('#status');
@@ -83,7 +83,7 @@ $(document).ready(() => {
 
   $layer.click(changeLayer);
 
-  $compile.click(compileLayout);
+//  $compile.click(compileLayout);
 
   $fwFile.click(downloadFirmwareFile);
 
@@ -195,7 +195,8 @@ $(document).ready(() => {
         keyboards: [],
         layout: '',
         layouts: {},
-        keymapName: 'mine'
+        keymapName: 'mine',
+        compileDisabled: false,
       },
       getters: {
         keyboard: state => state.keyboard,
@@ -205,7 +206,8 @@ $(document).ready(() => {
         keymapName: state => {
           let name = state.keymapName.replace(/\s/g, '_').toLowerCase();
           return name === '' ? 'mine' : name;
-        }
+        },
+        compileDisabled: state => state.compileDisabled,
       },
       actions: {
         changeKeyboard({ commit, dispatch }, _keyboard) {
@@ -238,6 +240,12 @@ $(document).ready(() => {
         }
       },
       mutations: {
+        enableCompile(state) {
+          state.compileDisabled = false
+        },
+        disableCompile(state) {
+          state.compileDisabled = true
+        },
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
         },
@@ -300,6 +308,7 @@ $(document).ready(() => {
          @click="loadDefault">Load Default</button>
       <button id="compile"
               title="Compile keymap"
+              v-bind:disabled="compileDisabled"
               @click="compile">Compile</button>
       </span>
     </div>
@@ -314,6 +323,7 @@ $(document).ready(() => {
         keyboards: () => store.getters['appStore/keyboards'],
         layout: () => store.getters['appStore/layout'],
         layouts: () => store.getters['appStore/layouts'],
+        compileDisabled: () => store.getters['appStore/compileDisabled'],
         realKeymapName: () => store.getters['appStore/keymapName']
       },
       watch: {
@@ -1052,11 +1062,11 @@ $(document).ready(() => {
   }
 
   function enableCompileButton() {
-    $compile.removeAttr('disabled');
+    vueStore.commit('appStore/enableCompile');
   }
 
   function disableCompileButton() {
-    $compile.attr('disabled', 'disabled');
+    vueStore.commit('appStore/disableCompile');
   }
 
   function enableOtherButtons() {

@@ -104,7 +104,7 @@ $(document).ready(() => {
     })
   );
 
-  $loadDefault.click(checkIsDirty(loadDefault));
+  //  $loadDefault.click(checkIsDirty(loadDefault));
 
   //Import function that takes in a JSON file reads it and loads the keyboard, layout and keymap data
   $fileImport.change(() => {
@@ -295,7 +295,9 @@ $(document).ready(() => {
         <input id="keymap-name" type="text" v-model="keymapName" placeholder="keymap name"/>
       </span>
       <span class="topctrl-3">
-      <button id="load-default" title="Load default keymap from QMK Firmware">Load Default</button>
+      <button id="load-default"
+         title="Load default keymap from QMK Firmware"
+         @click="loadDefault">Load Default</button>
       <button id="compile"
               title="Compile keymap"
               @click="compile">Compile</button>
@@ -322,6 +324,34 @@ $(document).ready(() => {
         }
       },
       methods: {
+        loadDefault() {
+          // hard-coding planck as the only default right now
+          var keyboardName = this.keyboard.replace('/', '_');
+          axios
+            .get(`keymaps/${keyboardName}_default.json`)
+            .then(({ data, status }) => {
+              if (status === 200) {
+                console.log(data);
+                reset_keymap();
+
+                this.updateLayout(data.layout);
+                this.updateKeymapName(data.keymap);
+                load_converted_keymap(data.layers);
+                render_layout(
+                  this.layouts[this.layout].map(v => Object.assign({}, v))
+                );
+                myKeymap.setDirty();
+              }
+            })
+            .catch(error => {
+              statusError(
+                `\n* Sorry there is no default for the ${
+                  this.keyboard
+                } keyboard... yet!`
+              );
+              console.log('error loadDefault', error);
+            });
+        },
         fetchKeyboards() {
           axios.get(backend_keyboards_url).then(this.createKeyboardDropdown);
         },
@@ -335,31 +365,37 @@ $(document).ready(() => {
           if (_.isString(keyboardP) && keyboardP !== '') {
             _keyboard = keyboardP;
           }
-          store.dispatch('appStore/changeKeyboard', _keyboard).then(() => {
-            // do something
-            this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
-            reset_keymap();
-            render_layout(
-              this.layouts[this.layout].map(v => Object.assign({}, v))
-            );
-          });
+          this.updateKeyboard({ target: { value: _keyboard } });
         },
         updateKeyboard(e) {
-          store.dispatch('appStore/changeKeyboard', e.target.value).then(() => {
-            reset_keymap();
-            this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+          let newKeyboard = e.target ? e.target.value : e;
+          let render = e.target;
+          return store
+            .dispatch('appStore/changeKeyboard', newKeyboard)
+            .then(() => {
+              reset_keymap();
+              this.$router.replace({
+                path: `/${this.keyboard}/${this.layout}`
+              });
+              if (render) {
+                render_layout(
+                  this.layouts[this.layout].map(v => Object.assign({}, v))
+                );
+                $status.html(''); // clear the DOM not the value otherwise weird things happen
+                viewReadme(this.keyboard);
+              }
+            });
+        },
+        updateLayout(e) {
+          let newLayout = e.target ? e.target.value : e;
+          let render = e.target;
+          store.commit('appStore/setLayout', newLayout);
+          reset_keymap();
+          this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+          render &&
             render_layout(
               this.layouts[this.layout].map(v => Object.assign({}, v))
             );
-          });
-        },
-        updateLayout(e) {
-          store.commit('appStore/setLayout', e.target.value);
-          reset_keymap();
-          this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
-          render_layout(
-            this.layouts[this.layout].map(v => Object.assign({}, v))
-          );
         },
         updateKeymapName(newKeymapName) {
           this.keymapName = newKeymapName;
@@ -367,7 +403,7 @@ $(document).ready(() => {
         },
         compile() {
           compileLayout(this.keyboard, this.realKeymapName, this.layout);
-        },
+        }
       },
       data: () => {
         return {
@@ -482,8 +518,8 @@ $(document).ready(() => {
     };
   }
 
-  function viewReadme() {
-    $.get(backend_readme_url_template({ keyboard: keyboard })).then(result => {
+  function viewReadme(_keyboard) {
+    $.get(backend_readme_url_template({ keyboard: _keyboard })).then(result => {
       $status.append(_.escape(result));
     });
   }
@@ -727,12 +763,7 @@ $(document).ready(() => {
       $status.append('\n');
     }
     $status.append(
-      '* Sending ' +
-        _keyboard +
-        ':' +
-        _keymapName +
-        ' with ' +
-        _layout
+      '* Sending ' + _keyboard + ':' + _keymapName + ' with ' + _layout
     );
     $.ajax({
       type: 'POST',
@@ -760,7 +791,9 @@ $(document).ready(() => {
     layer = e.target.innerHTML;
     myKeymap.changeLayer(layer);
     setLayerToNonEmpty(layer);
-    render_layout($layout.val());
+    let _layouts = vueStore.getters['appStore/layouts'];
+    let _layout = vueStore.getters['appStore/layout'];
+    render_layout(_layouts[_layout].map(v => Object.assign({}, v)));
   }
 
   function changeLayout() {
@@ -1972,13 +2005,20 @@ $(document).ready(() => {
       setKeycodeLayer: setKeycodeLayer,
       setText: setText,
       size: size,
-      swapKeys: swapKeys
+      swapKeys: swapKeys,
+      getLayer: getLayer
     });
     return instance;
 
     //////////
     // Impl
     //////////
+
+    function getLayer(__layer) {
+      return instance.km[__layer].map(key => {
+        return Object.assign({}, key);
+      });
+    }
 
     function assignKey(__layer, index, name, code, type) {
       instance.km[__layer][index] = {

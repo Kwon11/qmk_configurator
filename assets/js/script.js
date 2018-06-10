@@ -318,15 +318,28 @@ $(document).ready(() => {
           store.dispatch('appStore/changeKeyboard', _keyboard).then(() => {
             // do something
             this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+            reset_keymap();
+            render_layout(
+              this.layouts[this.layout].map(v => Object.assign({}, v))
+            );
           });
         },
         updateKeyboard(e) {
           store.dispatch('appStore/changeKeyboard', e.target.value).then(() => {
+            reset_keymap();
             this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+            render_layout(
+              this.layouts[this.layout].map(v => Object.assign({}, v))
+            );
           });
         },
         updateLayout(e) {
           store.commit('appStore/setLayout', e.target.value);
+          reset_keymap();
+          this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
+          render_layout(
+            this.layouts[this.layout].map(v => Object.assign({}, v))
+          );
         }
       },
       data: () => {
@@ -906,7 +919,7 @@ $(document).ready(() => {
 
     var max = { x: 0, y: 0 };
 
-    $.each(layouts[_layout], function(k, d) {
+    $.each(_layout, function(k, d) {
       // pre-calc size
       if (!d.w) {
         d.w = 1;
@@ -932,7 +945,7 @@ $(document).ready(() => {
       max.y *= config.SCALE;
     }
 
-    $.each(layouts[_layout], function(k, d) {
+    $.each(_layout, function(k, d) {
       if (!d.w) {
         d.w = 1;
       }

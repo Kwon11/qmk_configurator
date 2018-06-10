@@ -75,9 +75,11 @@ $(document).ready(() => {
   );
   */
 
+  /*
   $layout.change(
     checkIsDirty(changeLayout, () => $layout.val(layout_from_hash()))
   );
+  */
 
   $layer.click(changeLayer);
 
@@ -149,8 +151,6 @@ $(document).ready(() => {
     keypressListener
   );
 
-  ignoreKeypressListener($('input[type=text]'));
-
   var vueStatus = checkStatus();
 
   Vue.use(VueRouter);
@@ -169,6 +169,8 @@ $(document).ready(() => {
     store: vueStore,
     router: vueRouter
   }).$mount('#controller-app');
+
+  ignoreKeypressListener($('input[type=text]'));
   return;
 
   ////////////////////////////////////////
@@ -192,13 +194,18 @@ $(document).ready(() => {
         keyboard: '',
         keyboards: [],
         layout: '',
-        layouts: {}
+        layouts: {},
+        keymapName: 'mine'
       },
       getters: {
         keyboard: state => state.keyboard,
         keyboards: state => state.keyboards,
         layout: state => state.layout,
-        layouts: state => state.layouts
+        layouts: state => state.layouts,
+        keymapName: state => {
+          let name = state.keymapName.replace(/\s/g, '_').toLowerCase();
+          return name === '' ? 'mine' : name;
+        }
       },
       actions: {
         changeKeyboard({ commit, dispatch }, _keyboard) {
@@ -240,6 +247,9 @@ $(document).ready(() => {
         setLayout(state, _layout) {
           state.layout = _layout;
         },
+        setKeymapName(state, _keymapName) {
+          state.keymapName = _keymapName.replace(/\s/g, '_').toLowerCase();
+        },
         processInfoJSON(state, resp) {
           if (resp.status === 200) {
             let _layouts = resp.data.keyboards[state.keyboard].layouts;
@@ -276,21 +286,23 @@ $(document).ready(() => {
     <div class="topctrl">
       <span class="topctrl-1">
       <label style="display: inline-block; width: 75px;" >Keyboard:</label>
-      <select id="keyboard" v-bind:style="width" @change="updateKeyboard">
+      <select id="keyboard" v-bind:style="width" v-bind:value="keyboard" @change="updateKeyboard">
         <option v-for='keeb in keyboards' v-bind:value="keeb">{{keeb}}</option>
       </select>
       </span>
       <span class="topctrl-2">
         <label id="keymap-name-label">Keymap Name:</label>
-        <input id="keymap-name" type="text" value="mine" />
+        <input id="keymap-name" type="text" v-model="keymapName" placeholder="keymap name"/>
       </span>
       <span class="topctrl-3">
       <button id="load-default" title="Load default keymap from QMK Firmware">Load Default</button>
-      <button id="compile" title="Compile keymap">Compile</button>
+      <button id="compile"
+              title="Compile keymap"
+              @click="compile">Compile</button>
       </span>
     </div>
     <label style="display: inline-block; width: 75px;">Layout:</label>
-    <select id="layout" @change="updateLayout">
+    <select id="layout" v-bind:value="layout" @change="updateLayout">
         <option v-for='(aLayout, layoutName) in layouts' v-bind:value="layoutName">{{layoutName}}</option>
     </select>
   </div>
@@ -299,7 +311,15 @@ $(document).ready(() => {
         keyboard: () => store.getters['appStore/keyboard'],
         keyboards: () => store.getters['appStore/keyboards'],
         layout: () => store.getters['appStore/layout'],
-        layouts: () => store.getters['appStore/layouts']
+        layouts: () => store.getters['appStore/layouts'],
+        realKeymapName: () => store.getters['appStore/keymapName']
+      },
+      watch: {
+        keymapName: function(newKeymapName, oldKeymapName) {
+          if (newKeymapName !== oldKeymapName) {
+            this.updateKeymapName(newKeymapName);
+          }
+        }
       },
       methods: {
         fetchKeyboards() {
@@ -340,10 +360,18 @@ $(document).ready(() => {
           render_layout(
             this.layouts[this.layout].map(v => Object.assign({}, v))
           );
-        }
+        },
+        updateKeymapName(newKeymapName) {
+          this.keymapName = newKeymapName;
+          store.commit('appStore/setKeymapName', newKeymapName);
+        },
+        compile() {
+          compileLayout(this.keyboard, this.realKeymapName, this.layout);
+        },
       },
       data: () => {
         return {
+          keymapName: 'mine',
           width: 0,
           selected: ''
         };
@@ -685,13 +713,13 @@ $(document).ready(() => {
     download(fwFilename, fwStream);
   }
 
-  function compileLayout() {
+  function compileLayout(_keyboard, _keymapName, _layout) {
     disableCompileButton();
     var layers = myKeymap.exportLayers({ compiler: true });
     var data = {
-      keyboard: $keyboard.val(),
-      keymap: getKeymapName(),
-      layout: $layout.val(),
+      keyboard: _keyboard,
+      keymap: _keymapName,
+      layout: _layout,
       layers: layers
     };
     console.log(JSON.stringify(data));
@@ -700,11 +728,11 @@ $(document).ready(() => {
     }
     $status.append(
       '* Sending ' +
-        $keyboard.val() +
+        _keyboard +
         ':' +
-        getKeymapName() +
+        _keymapName +
         ' with ' +
-        $layout.val()
+        _layout
     );
     $.ajax({
       type: 'POST',

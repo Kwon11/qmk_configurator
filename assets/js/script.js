@@ -393,6 +393,7 @@ $(document).ready(() => {
                 );
                 $status.html(''); // clear the DOM not the value otherwise weird things happen
                 viewReadme(this.keyboard);
+                disableOtherButtons();
               }
             });
         },

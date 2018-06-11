@@ -1,13 +1,10 @@
 $(document).ready(() => {
   const PREVIEW_LABEL = 'Preview info.json';
-  var isPreviewMode = false;
   //  var keymap = [];
   var layer = 0;
   var job_id = '';
   var fwStream = '';
   var fwFilename = '';
-  var status = '';
-  var keyboard = '';
   var layout = '';
   var backend_baseurl = 'https://api.qmk.fm';
   var backend_keyboards_url = `${backend_baseurl}/v1/keyboards`;
@@ -16,6 +13,7 @@ $(document).ready(() => {
   var backend_readme_url_template = _.template(
     `${backend_keyboards_url}/<%= keyboard %>/readme`
   );
+
   var defaults = {
     MAX_X: 775,
     KEY_WIDTH: 40,
@@ -63,22 +61,6 @@ $(document).ready(() => {
   $visualKeymap.click(selectKeymapKey);
   $('#keycodes').click(assignKeycodeToSelectedKey);
 
-  //  var promise = $.get(backend_keyboards_url, createKeyboardDropdown);
-
-  /*
-  $keyboard.change(
-    checkIsDirty(switchKeyboardLayout, () =>
-      $keyboard.val(keyboard_from_hash())
-    )
-  );
-  */
-
-  /*
-  $layout.change(
-    checkIsDirty(changeLayout, () => $layout.val(layout_from_hash()))
-  );
-  */
-
   $layer.click(changeLayer);
 
   //  $compile.click(compileLayout);
@@ -114,26 +96,13 @@ $(document).ready(() => {
   // explicitly export functions to global namespace
   window.setSelectWidth = setSelectWidth;
 
-  /*
-  promise.then(() => {
-    // wait until keyboard list has loaded before checking url hash
-    urlRouteChanged();
-  });
-  */
-
   var keypressListener = new window.keypress.Listener();
   keypressListener.register_many(generateKeypressCombos(keycodes));
   keypressListener.simple_combo('ctrl shift i', () => {
     // add a special bogus entry to the keyboard list for previews
-    if (!isPreviewMode) {
-      $keyboard.append(
-        $('<option>', {
-          value: PREVIEW_LABEL,
-          text: PREVIEW_LABEL
-        })
-      );
+    if (!vueStore.getters['app/isPreview']) {
+      vueStore.commit('app/enablePreview');
       disableCompileButton();
-      isPreviewMode = true;
     }
     $infoPreview.click();
   });
@@ -194,7 +163,8 @@ $(document).ready(() => {
         layout: '',
         layouts: {},
         keymapName: 'mine',
-        compileDisabled: false
+        compileDisabled: false,
+        isPreview: false
       },
       getters: {
         keyboard: state => state.keyboard,
@@ -205,11 +175,14 @@ $(document).ready(() => {
           let name = state.keymapName.replace(/\s/g, '_').toLowerCase();
           return name === '' ? 'mine' : name;
         },
-        compileDisabled: state => state.compileDisabled
+        compileDisabled: state => state.compileDisabled,
+        isPreview: state => state.isPreview
       },
       actions: {
         changeKeyboard({ state, commit, dispatch }, _keyboard) {
           let promise = new Promise(resolve => {
+            commit('disablePreview');
+            commit('enableCompile');
             commit('setKeyboard', _keyboard);
             dispatch('loadLayouts').then(() => {
               commit('setLayout', _.first(_.keys(state.layouts)));
@@ -245,6 +218,15 @@ $(document).ready(() => {
         disableCompile(state) {
           state.compileDisabled = true;
         },
+        enablePreview(state) {
+          state.isPreview = true;
+          state.keyboards = state.keyboards.concat(PREVIEW_LABEL);
+        },
+        disablePreview(state) {
+          state.isPreview = false;
+          state.keyboards = state.keyboards.filter(k => k !== PREVIEW_LABEL);
+          state.keymapName = 'mine';
+        },
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
         },
@@ -258,8 +240,13 @@ $(document).ready(() => {
           state.keymapName = _keymapName.replace(/\s/g, '_').toLowerCase();
         },
         processInfoJSON(state, resp) {
-          if (resp.status === 200) {
-            let _layouts = resp.data.keyboards[state.keyboard].layouts;
+          if (resp.status === 200 || state.isPreview) {
+            let _layouts = {};
+            if (state.isPreview) {
+              _layouts = resp.keyboards[PREVIEW_LABEL].layouts;
+            } else {
+              _layouts = resp.data.keyboards[state.keyboard].layouts;
+            }
             if (_.size(_layouts) === 0) {
               state.layouts = { to_be_defined: [] };
             } else if (_layouts) {
@@ -281,7 +268,7 @@ $(document).ready(() => {
 
     return new Vuex.Store({
       modules: {
-        appStore
+        app: appStore
       },
       strict: true
     });
@@ -325,17 +312,22 @@ $(document).ready(() => {
   </div>
       `,
       computed: {
-        keyboard: () => store.getters['appStore/keyboard'],
-        keyboards: () => store.getters['appStore/keyboards'],
-        layout: () => store.getters['appStore/layout'],
-        layouts: () => store.getters['appStore/layouts'],
-        compileDisabled: () => store.getters['appStore/compileDisabled'],
-        realKeymapName: () => store.getters['appStore/keymapName']
+        keyboard: () => store.getters['app/keyboard'],
+        keyboards: () => store.getters['app/keyboards'],
+        layout: () => store.getters['app/layout'],
+        layouts: () => store.getters['app/layouts'],
+        compileDisabled: () => store.getters['app/compileDisabled'],
+        realKeymapName: () => store.getters['app/keymapName']
       },
       watch: {
         keymapName: function(newKeymapName, oldKeymapName) {
           if (newKeymapName !== oldKeymapName) {
             this.updateKeymapName(newKeymapName);
+          }
+        },
+        realKeymapName: function(newName, oldName) {
+          if (newName !== oldName) {
+            this.keymapName = newName;
           }
         }
       },
@@ -374,11 +366,11 @@ $(document).ready(() => {
         createKeyboardDropdown({ data, status }) {
           let _keyboard = '';
           if (status === 200) {
-            store.commit('appStore/setKeyboards', data);
+            store.commit('app/setKeyboards', data);
             _keyboard = _.first(this.keyboards);
           }
           let { keyboardP } = this.$route.params;
-          if (_.isString(keyboardP) && keyboardP !== '') {
+          if (_.isString(keyboardP) && keyboardP !== '' && keyboardP !== PREVIEW_LABEL) {
             _keyboard = keyboardP;
           }
           this.updateKeyboard({ target: { value: _keyboard } });
@@ -386,26 +378,24 @@ $(document).ready(() => {
         updateKeyboard(e) {
           let newKeyboard = e.target ? e.target.value : e;
           let render = e.target;
-          return store
-            .dispatch('appStore/changeKeyboard', newKeyboard)
-            .then(() => {
-              reset_keymap();
-              this.$router.replace({
-                path: `/${this.keyboard}/${this.layout}`
-              });
-              if (render) {
-                render_layout(
-                  this.layouts[this.layout].map(v => Object.assign({}, v))
-                );
-                viewReadme(this.keyboard);
-                disableOtherButtons();
-              }
+          return store.dispatch('app/changeKeyboard', newKeyboard).then(() => {
+            reset_keymap();
+            this.$router.replace({
+              path: `/${this.keyboard}/${this.layout}`
             });
+            if (render) {
+              render_layout(
+                this.layouts[this.layout].map(v => Object.assign({}, v))
+              );
+              viewReadme(this.keyboard);
+              disableOtherButtons();
+            }
+          });
         },
         updateLayout(e) {
           let newLayout = e.target ? e.target.value : e;
           let render = e.target;
-          store.commit('appStore/setLayout', newLayout);
+          store.commit('app/setLayout', newLayout);
           reset_keymap();
           this.$router.replace({ path: `/${this.keyboard}/${this.layout}` });
           render &&
@@ -415,7 +405,7 @@ $(document).ready(() => {
         },
         updateKeymapName(newKeymapName) {
           this.keymapName = newKeymapName;
-          store.commit('appStore/setKeymapName', newKeymapName);
+          store.commit('app/setKeymapName', newKeymapName);
         },
         compile() {
           compileLayout(this.keyboard, this.realKeymapName, this.layout);
@@ -602,19 +592,6 @@ $(document).ready(() => {
     };
   }
 
-  function getKeymapName() {
-    var keymapName = $('#keymap-name')
-      .val()
-      .replace(/\s/g, '_')
-      .toLowerCase();
-    // use a default name if it is blank
-    return keymapName === '' ? 'mine' : keymapName;
-  }
-
-  function setKeymapName(name) {
-    $('#keymap-name').val(name.replace(/\s/g, '_').toLowerCase());
-  }
-
   function previewInfoOnLoad(reader /*e*/) {
     var jsonText = reader.result;
     var data;
@@ -628,18 +605,14 @@ $(document).ready(() => {
 
     reset_keymap();
 
-    keyboard = data.keyboard_name;
-    $keyboard.val(PREVIEW_LABEL);
-    setSelectWidth($keyboard);
-    load_layouts($keyboard.val(), data).then(() => {
-      setSelectWidth($layout);
-      layout = _.first(_.keys(data.layouts));
-      $layout.val(layout);
-      switchKeyboardLayout(isPreviewMode);
+    vueStore.commit('app/setKeyboard', PREVIEW_LABEL);
+    vueStore.dispatch('app/loadLayouts', data).then(() => {
+      layout = _.first(_.keys(vueStore.getters['app/layouts']));
+      vueStore.commit('app/setLayout', layout);
+      vueStore.commit('app/setKeymapName', 'info.json preview');
 
-      setKeymapName('info.json preview');
-
-      render_layout($layout.val());
+      let _layouts = vueStore.getters['app/layouts'];
+      render_layout(_layouts[layout].map(v => Object.assign({}, v)));
     });
   }
 
@@ -680,15 +653,12 @@ $(document).ready(() => {
 
     reset_keymap();
 
-    vueStore.commit('appStore/setKeyboard', data.keyboard);
+    vueStore.commit('app/setKeyboard', data.keyboard);
     vueStore
-      .dispatch(
-        'appStore/changeKeyboard',
-        vueStore.getters['appStore/keyboard']
-      )
+      .dispatch('app/changeKeyboard', vueStore.getters['app/keyboard'])
       .then(() => {
-        vueStore.commit('appStore/setLayout', data.layout);
-        vueStore.commit('appStore/setKeymapName', data.keymap);
+        vueStore.commit('app/setLayout', data.layout);
+        vueStore.commit('app/setKeymapName', data.keymap);
         // todo validate these values
         vueRouter.replace({
           path: `/${data.keyboard}/${data.layout}`
@@ -696,7 +666,7 @@ $(document).ready(() => {
 
         load_converted_keymap(data.layers);
 
-        let _layouts = vueStore.getters['appStore/layouts'];
+        let _layouts = vueStore.getters['app/layouts'];
         render_layout(_layouts[data.layout].map(v => Object.assign({}, v)));
         myKeymap.setDirty();
         disableOtherButtons();
@@ -716,13 +686,16 @@ $(document).ready(() => {
 
     //API payload format
     var data = {
-      keyboard: vueStore.getters['appStore/keyboard'],
-      keymap: vueStore.getters['appStore/keymapName'],
-      layout: vueStore.getters['appStore/layout'],
+      keyboard: vueStore.getters['app/keyboard'],
+      keymap: vueStore.getters['app/keymapName'],
+      layout: vueStore.getters['app/layout'],
       layers: layers
     };
 
-    download(`${vueStore.getters['appStore/keymapName']}.json`, JSON.stringify(data));
+    download(
+      `${vueStore.getters['app/keymapName']}.json`,
+      JSON.stringify(data)
+    );
   }
   function scrollHandler() {
     if (offsetTop < $(document).scrollTop()) {
@@ -783,31 +756,9 @@ $(document).ready(() => {
     layer = e.target.innerHTML;
     myKeymap.changeLayer(layer);
     setLayerToNonEmpty(layer);
-    let _layouts = vueStore.getters['appStore/layouts'];
-    let _layout = vueStore.getters['appStore/layout'];
+    let _layouts = vueStore.getters['app/layouts'];
+    let _layout = vueStore.getters['app/layout'];
     render_layout(_layouts[_layout].map(v => Object.assign({}, v)));
-  }
-
-  function changeLayout() {
-    window.location.hash = '#/' + $keyboard.val() + '/' + $layout.val();
-    myKeymap.clearDirty();
-  }
-
-  function switchKeyboardLayout(preview = false) {
-    window.location.hash = '#/' + $keyboard.val() + '/' + $layout.val();
-    $status.html(''); // clear the DOM not the value otherwise weird things happen
-    myKeymap.clearDirty();
-    if (!preview) {
-      // only do these steps if we haven't been invoked from preview
-      enableCompileButton();
-      if (isPreviewMode) {
-        $keyboard.find('option[value="' + PREVIEW_LABEL + '"]').remove();
-        isPreviewMode = false;
-        setKeymapName('mine');
-      }
-    }
-    disableOtherButtons();
-    // load_layouts($keyboard).val());
   }
 
   function makeDraggable(k, d) {
@@ -872,48 +823,6 @@ $(document).ready(() => {
           html: d.label
         })
       );
-    }
-  }
-
-  function load_layouts(_keyboard, preview) {
-    var _processInfoJSON = _.partial(processInfoJSON, _keyboard);
-    if (!_.isUndefined(preview)) {
-      let p = new Promise(resolve => {
-        let fake = {
-          keyboards: {}
-        };
-        fake.keyboards[_keyboard] = preview;
-        _processInfoJSON(fake);
-        resolve(preview);
-      });
-      return p;
-    }
-    return $.get(backend_keyboards_url + '/' + _keyboard, _processInfoJSON);
-    function processInfoJSON(_keyboard, data) {
-      if (data.keyboards[_keyboard]) {
-        $layout.find('option').remove();
-        layouts = _.reduce(
-          data.keyboards[_keyboard].layouts,
-          function(acc, _layout, key) {
-            $layout.append(
-              $('<option>', {
-                value: key,
-                text: key
-              })
-            );
-            acc[key] = _layout.layout ? _layout.layout : _layout;
-            return acc;
-          },
-          {}
-        );
-
-        if (layout_from_hash()) {
-          $layout.val(layout_from_hash());
-        }
-        changeLayout();
-        setSelectWidth($layout);
-        render_layout($layout.val());
-      }
     }
   }
 
@@ -1008,11 +917,11 @@ $(document).ready(() => {
   }
 
   function enableCompileButton() {
-    vueStore.commit('appStore/enableCompile');
+    vueStore.commit('app/enableCompile');
   }
 
   function disableCompileButton() {
-    vueStore.commit('appStore/disableCompile');
+    vueStore.commit('app/disableCompile');
   }
 
   function enableOtherButtons() {

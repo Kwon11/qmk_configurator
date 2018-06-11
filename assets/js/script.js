@@ -397,7 +397,6 @@ $(document).ready(() => {
                 render_layout(
                   this.layouts[this.layout].map(v => Object.assign({}, v))
                 );
-                $status.html(''); // clear the DOM not the value otherwise weird things happen
                 viewReadme(this.keyboard);
                 disableOtherButtons();
               }
@@ -537,6 +536,7 @@ $(document).ready(() => {
 
   function viewReadme(_keyboard) {
     $.get(backend_readme_url_template({ keyboard: _keyboard })).then(result => {
+      $status.html('');
       $status.append(_.escape(result));
     });
   }
@@ -680,23 +680,28 @@ $(document).ready(() => {
 
     reset_keymap();
 
-    keyboard = data.keyboard;
-    $keyboard.val(keyboard);
-    setSelectWidth($keyboard);
-    load_layouts($keyboard.val()).then(() => {
-      setSelectWidth($layout);
-      layout = data.layout;
-      $layout.val(layout);
-      switchKeyboardLayout();
+    vueStore.commit('appStore/setKeyboard', data.keyboard);
+    vueStore
+      .dispatch(
+        'appStore/changeKeyboard',
+        vueStore.getters['appStore/keyboard']
+      )
+      .then(() => {
+        vueStore.commit('appStore/setLayout', data.layout);
+        vueStore.commit('appStore/setKeymapName', data.keymap);
+        // todo validate these values
+        vueRouter.replace({
+          path: `/${data.keyboard}/${data.layout}`
+        });
 
-      setKeymapName(data.keymap);
+        load_converted_keymap(data.layers);
 
-      load_converted_keymap(data.layers);
-
-      render_layout($layout.val());
-      myKeymap.setDirty();
-      viewReadme();
-    });
+        let _layouts = vueStore.getters['appStore/layouts'];
+        render_layout(_layouts[data.layout].map(v => Object.assign({}, v)));
+        myKeymap.setDirty();
+        disableOtherButtons();
+        viewReadme(data.keyboard);
+      });
   }
 
   function importJSON(files) {

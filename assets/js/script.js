@@ -716,13 +716,13 @@ $(document).ready(() => {
 
     //API payload format
     var data = {
-      keyboard: $keyboard.val(),
-      keymap: getKeymapName(),
-      layout: $layout.val(),
+      keyboard: vueStore.getters['appStore/keyboard'],
+      keymap: vueStore.getters['appStore/keymapName'],
+      layout: vueStore.getters['appStore/layout'],
       layers: layers
     };
 
-    download(getKeymapName() + '.json', JSON.stringify(data));
+    download(`${vueStore.getters['appStore/keymapName']}.json`, JSON.stringify(data));
   }
   function scrollHandler() {
     if (offsetTop < $(document).scrollTop()) {

@@ -235,6 +235,7 @@ $(document).ready(() => {
             .get(backend_keyboards_url + '/' + state.keyboard)
             .then(resp => {
               commit('processInfoJSON', resp);
+              commit('setLayout', _.first(_.keys(state.layouts)));
               return resp;
             });
         }
@@ -270,11 +271,10 @@ $(document).ready(() => {
                 },
                 {}
               );
-              state.layout = _.first(_.keys(state.layouts));
               return state.layouts;
             }
-            return {};
           }
+          return {};
         }
       }
     };
@@ -295,7 +295,9 @@ $(document).ready(() => {
       <span class="topctrl-1">
       <label style="display: inline-block; width: 75px;" >Keyboard:</label>
       <select id="keyboard" v-bind:style="width" v-bind:value="keyboard" @change="updateKeyboard">
-        <option v-for='keeb in keyboards' v-bind:value="keeb">{{keeb}}</option>
+        <option v-for='keeb in keyboards' :key="keeb" v-bind:value="keeb">
+          {{keeb}}
+        </option>
       </select>
       </span>
       <span class="topctrl-2">
@@ -314,7 +316,11 @@ $(document).ready(() => {
     </div>
     <label style="display: inline-block; width: 75px;">Layout:</label>
     <select id="layout" v-bind:value="layout" @change="updateLayout">
-        <option v-for='(aLayout, layoutName) in layouts' v-bind:value="layoutName">{{layoutName}}</option>
+      <option v-for='(aLayout, layoutName) in layouts'
+              :key="layoutName"
+              v-bind:value="layoutName">
+        {{layoutName}}
+      </option>
     </select>
   </div>
       `,

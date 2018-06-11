@@ -1,13 +1,11 @@
 $(document).ready(() => {
   const PREVIEW_LABEL = 'Preview info.json';
-  var layouts = {};
   var isPreviewMode = false;
   //  var keymap = [];
   var layer = 0;
   var job_id = '';
   var fwStream = '';
   var fwFilename = '';
-  var keyboards = [];
   var status = '';
   var keyboard = '';
   var layout = '';
@@ -36,12 +34,12 @@ $(document).ready(() => {
   var $keyboard = $('#keyboard');
   var $layout = $('#layout');
   var $layer = $('.layer');
-//  var $compile = $('#compile');
+  //  var $compile = $('#compile');
   var $fwFile = $('#fwFile');
   var $source = $('#source');
   var $export = $('#export');
   var $import = $('#import');
-//  var $loadDefault = $('#load-default');
+  //  var $loadDefault = $('#load-default');
   var $fileImport = $('#fileImport');
   var $infoPreview = $('#infoPreview');
   var $status = $('#status');
@@ -83,7 +81,7 @@ $(document).ready(() => {
 
   $layer.click(changeLayer);
 
-//  $compile.click(compileLayout);
+  //  $compile.click(compileLayout);
 
   $fwFile.click(downloadFirmwareFile);
 
@@ -196,7 +194,7 @@ $(document).ready(() => {
         layout: '',
         layouts: {},
         keymapName: 'mine',
-        compileDisabled: false,
+        compileDisabled: false
       },
       getters: {
         keyboard: state => state.keyboard,
@@ -207,13 +205,14 @@ $(document).ready(() => {
           let name = state.keymapName.replace(/\s/g, '_').toLowerCase();
           return name === '' ? 'mine' : name;
         },
-        compileDisabled: state => state.compileDisabled,
+        compileDisabled: state => state.compileDisabled
       },
       actions: {
-        changeKeyboard({ commit, dispatch }, _keyboard) {
+        changeKeyboard({ state, commit, dispatch }, _keyboard) {
           let promise = new Promise(resolve => {
             commit('setKeyboard', _keyboard);
             dispatch('loadLayouts').then(() => {
+              commit('setLayout', _.first(_.keys(state.layouts)));
               resolve();
             });
           });
@@ -235,17 +234,16 @@ $(document).ready(() => {
             .get(backend_keyboards_url + '/' + state.keyboard)
             .then(resp => {
               commit('processInfoJSON', resp);
-              commit('setLayout', _.first(_.keys(state.layouts)));
               return resp;
             });
         }
       },
       mutations: {
         enableCompile(state) {
-          state.compileDisabled = false
+          state.compileDisabled = false;
         },
         disableCompile(state) {
-          state.compileDisabled = true
+          state.compileDisabled = true;
         },
         setKeyboard(state, _keyboard) {
           state.keyboard = _keyboard;
@@ -262,7 +260,9 @@ $(document).ready(() => {
         processInfoJSON(state, resp) {
           if (resp.status === 200) {
             let _layouts = resp.data.keyboards[state.keyboard].layouts;
-            if (_layouts) {
+            if (_.size(_layouts) === 0) {
+              state.layouts = { to_be_defined: [] };
+            } else if (_layouts) {
               state.layouts = _.reduce(
                 _layouts,
                 function(acc, _layout, key) {
@@ -271,8 +271,8 @@ $(document).ready(() => {
                 },
                 {}
               );
-              return state.layouts;
             }
+            return state.layouts;
           }
           return {};
         }
@@ -602,36 +602,6 @@ $(document).ready(() => {
     };
   }
 
-  function loadDefault() {
-    // hard-coding planck as the only default right now
-    var keyboardName = $keyboard.val().replace('/', '_');
-    $.get(`keymaps/${keyboardName}_default.json`, data => {
-      console.log(data);
-      reset_keymap();
-
-      keyboard = data.keyboard;
-      $keyboard.val(keyboard);
-      setSelectWidth($keyboard);
-      load_layouts($keyboard.val()).then(() => {
-        layout = data.layout;
-        $layout.val(layout);
-        setSelectWidth($layout);
-
-        setKeymapName(data.keymap);
-
-        load_converted_keymap(data.layers);
-
-        render_layout($layout.val());
-        myKeymap.setDirty();
-      });
-    }).fail(error => {
-      statusError(
-        `\n* Sorry there is no default for the ${$keyboard.val()} keyboard... yet!`
-      );
-      console.log('error loadDefault', error);
-    });
-  }
-
   function getKeymapName() {
     var keymapName = $('#keymap-name')
       .val()
@@ -835,23 +805,6 @@ $(document).ready(() => {
     // load_layouts($keyboard).val());
   }
 
-  function createKeyboardDropdown(data) {
-    keyboards = data;
-    _.forEach(data, function(keyb) {
-      $keyboard.append(
-        $('<option>', {
-          value: keyb,
-          text: keyb
-        })
-      );
-    });
-    if (keyboard_from_hash()) {
-      $keyboard.val(keyboard_from_hash());
-    }
-    setSelectWidth($keyboard);
-    load_layouts($keyboard.val());
-  }
-
   function makeDraggable(k, d) {
     $(d).draggable({
       zIndex: 100,
@@ -915,25 +868,6 @@ $(document).ready(() => {
         })
       );
     }
-  }
-
-  function urlRouteChanged() {
-    console.log(window.location.hash);
-
-    if (keyboard_from_hash() && keyboard_from_hash() !== keyboard) {
-      reset_keymap();
-      keyboard = keyboard_from_hash();
-      $keyboard.val(keyboard);
-      setSelectWidth($keyboard);
-      load_layouts($keyboard.val());
-    } else if (layout_from_hash() && layout_from_hash() !== layout) {
-      reset_keymap();
-      layout = layout_from_hash();
-      $layout.val(layout);
-      setSelectWidth($layout);
-      render_layout($layout.val());
-    }
-    viewReadme();
   }
 
   function load_layouts(_keyboard, preview) {
@@ -1304,30 +1238,6 @@ $(document).ready(() => {
     layer = 0;
     $('.layer').removeClass('non-empty active');
     $('.layer.0').addClass('active non-empty');
-  }
-
-  function keyboard_from_hash() {
-    if (keyboards.indexOf(window.location.hash.replace(/\#\//gi, '')) !== -1) {
-      return window.location.hash.replace(/\#\//gi, '');
-    } else if (
-      keyboards.indexOf(
-        window.location.hash.replace(/\#\//gi, '').replace(/\/[^\/]+$/gi, '')
-      ) !== -1
-    ) {
-      return window.location.hash
-        .replace(/\#\//gi, '')
-        .replace(/\/[^\/]+$/gi, '');
-    } else {
-      return false;
-    }
-  }
-
-  function layout_from_hash() {
-    if (window.location.hash.replace(/^.+\//i, '') in layouts) {
-      return window.location.hash.replace(/^.+\//i, '');
-    } else {
-      return false;
-    }
   }
 
   function droppable_config(t, key) {

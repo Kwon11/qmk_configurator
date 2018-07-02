@@ -441,11 +441,12 @@ $(document).ready(() => {
   function keycodeComponent(store) {
     return Vue.component('keycode', {
       template: `
-      <div :class="classObject"
-           :data-code="code"
-           :data-type="type"
-           :title="code"
-      >{{keycode.name}}</div>
+      <drag :transfer-data="transferdata"
+            :class="classObject"
+            :data-code="code"
+            :data-type="type"
+            :title="code"
+        >{{keycode.name}}</drag>
       `,
       props: {
         keycode: Object,
@@ -469,6 +470,9 @@ $(document).ready(() => {
         },
         width() {
           return _.isUndefined(this.keycode.width) ? undefined: this.keycode.width;
+        },
+        transferdata() {
+          return this.keycode;
         }
       }
     });

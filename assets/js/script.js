@@ -38,12 +38,12 @@ $(document).ready(() => {
 
   var lookupKeycode = _.memoize(lookupKeycode); // cache lookups
 
-  var keycodes = getKeycodes();
+//  var keycodes = getKeycodes();
 
-  $.each(keycodes, createKeyCodeUI);
+//  $.each(keycodes, createKeyCodeUI);
 
-  var $keycodes = $('.keycode'); // wait until they are created
-  $keycodes.each(makeDraggable);
+ // var $keycodes = $('.keycode'); // wait until they are created
+//  $keycodes.each(makeDraggable);
 
   // click to assign keys to keymap
   $visualKeymap.click(selectKeymapKey);
@@ -57,20 +57,6 @@ $(document).ready(() => {
   $(document).on('scroll', scrollHandler);
 
   // explicitly export functions to global namespace
-
-  var keypressListener = new window.keypress.Listener();
-  keypressListener.register_many(generateKeypressCombos(keycodes));
-  keypressListener.simple_combo('ctrl shift i', () => {
-    if (!vueStore.getters['app/isPreview']) {
-      vueStore.commit('app/enablePreview');
-      disableCompileButton();
-    }
-  });
-
-  var ignoreKeypressListener = _.partial(
-    ignoreKeypressListener,
-    keypressListener
-  );
 
   var vueStatus = checkStatus();
 
@@ -90,6 +76,20 @@ $(document).ready(() => {
     store: vueStore,
     router: vueRouter
   }).$mount('#controller-app');
+
+  var keypressListener = new window.keypress.Listener();
+  keypressListener.register_many(generateKeypressCombos(vueStore.getters['keycodes/keycodes']));
+  keypressListener.simple_combo('ctrl shift i', () => {
+    if (!vueStore.getters['app/isPreview']) {
+      vueStore.commit('app/enablePreview');
+      disableCompileButton();
+    }
+  });
+
+  var ignoreKeypressListener = _.partial(
+    ignoreKeypressListener,
+    keypressListener
+  );
 
   ignoreKeypressListener($('input[type=text]'));
   return {
@@ -112,6 +112,7 @@ $(document).ready(() => {
     let controllerTop = topControllerComponent(store);
     let statusPanel = statusPanelComponent(store);
     let controllerBottom = bottomControllerComponent(store);
+    let keycodes = keycodesCompoonent(store);
     return Vue.component('controller', {
       store,
       template: `
@@ -119,8 +120,9 @@ $(document).ready(() => {
       <controllerTop></controllerTop>
       <statusPanel></statusPanel>
       <controllerBottom></controllerBottom>
+      <keycodes />
   </div>`,
-      components: { controllerTop, statusPanel, controllerBottom }
+      components: { controllerTop, statusPanel, controllerBottom, keycodes }
     });
   }
 
@@ -388,6 +390,22 @@ $(document).ready(() => {
     };
   }
 
+  function initKeycodesStore() {
+    return {
+      namespaced: true,
+      state: {
+        keycodes: getKeycodes(),
+      },
+      getters: {
+        keycodes: state => state.keycodes,
+      },
+      actions: {
+      },
+      mutations: {
+      }
+    };
+  }
+
   /**
    * newStore
    * @return {object} initialized Vuex store instance
@@ -396,10 +414,85 @@ $(document).ready(() => {
     return new Vuex.Store({
       modules: {
         app: initAppStore(),
-        status: initStatusStore()
+        status: initStatusStore(),
+        keycodes: initKeycodesStore(),
       },
       strict: true
     });
+  }
+
+  function keycodesCompoonent(store) {
+    let keycode = keycodeComponent(store);
+    return Vue.component('keycodes', {
+      components: { keycode },
+      template: `
+      <div id="keycodes">
+        <keycode v-for="keycode in keycodes" :keycode="keycode" :key="keycode.code" />
+      </div>
+      `,
+      computed: {
+        keycodes() {
+          return store.getters['keycodes/keycodes'];
+        },
+      },
+    });
+  }
+
+  function keycodeComponent(store) {
+    return Vue.component('keycode', {
+      template: `
+      <div :class="classObject"
+           :data-code="code"
+           :data-type="type"
+           :title="code"
+      >{{keycode.name}}</div>
+      `,
+      props: {
+        keycode: Object,
+      },
+      computed: {
+        classObject() {
+           let isSpace = _.isUndefined(this.keycode.code);
+           return {
+             keycode: !isSpace,
+             ['keycode-' + this.width]: !isSpace && this.width,
+             ['keycode-' + this.type]: !isSpace && this.type,
+             space: isSpace,
+             ['space-' + this.keycode.width]: isSpace,
+           };
+        },
+        code() {
+          return _.isUndefined(this.keycode.code) ? undefined : this.keycode.code;
+        },
+        type() {
+          return _.isUndefined(this.keycode.type) ? undefined : this.keycode.type;
+        },
+        width() {
+          return _.isUndefined(this.keycode.width) ? undefined: this.keycode.width;
+        }
+      }
+    });
+  }
+
+  function createKeyCodeUI(k, d) {
+    if (d.code) {
+      var help = d.title ? ` - ${d.title}` : '';
+      var keycode = $('<div>', {
+        class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
+        'data-code': d.code,
+        'data-type': d.type,
+        html: d.name,
+        title: `${d.code}${help}`
+      });
+      $('#keycodes').append(keycode);
+    } else {
+      $('#keycodes').append(
+        $('<div>', {
+          class: 'space space-' + d.width,
+          html: d.label
+        })
+      );
+    }
   }
 
   function bottomControllerComponent(store) {
@@ -1165,26 +1258,6 @@ $(document).ready(() => {
     });
   }
 
-  function createKeyCodeUI(k, d) {
-    if (d.code) {
-      var help = d.title ? ` - ${d.title}` : '';
-      var keycode = $('<div>', {
-        class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
-        'data-code': d.code,
-        'data-type': d.type,
-        html: d.name,
-        title: `${d.code}${help}`
-      });
-      $('#keycodes').append(keycode);
-    } else {
-      $('#keycodes').append(
-        $('<div>', {
-          class: 'space space-' + d.width,
-          html: d.label
-        })
-      );
-    }
-  }
 
   function calcKeyKeymapDims(w, h) {
     return {
@@ -1343,7 +1416,7 @@ $(document).ready(() => {
   }
 
   function lookupKeycode(searchTerm, isKeys) {
-    var found = keycodes.find(({ code, keys }) => {
+    var found = vueStore.getters['keycodes/keycodes'].find(({ code, keys }) => {
       return code === searchTerm || (isKeys && keys && keys === searchTerm);
     });
     return found;

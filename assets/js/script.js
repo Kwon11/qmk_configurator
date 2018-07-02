@@ -32,23 +32,24 @@ $(document).ready(() => {
 
   var myKeymap = new Keymap(layer);
 
-  var $layer = $('.layer');
+  //var $layer = $('.layer');
 
-  var $visualKeymap = $('#visual-keymap');
+  //var $visualKeymap = $('#visual-keymap');
 
   var lookupKeycode = _.memoize(lookupKeycode); // cache lookups
 
-//  var keycodes = getKeycodes();
+  //  var keycodes = getKeycodes();
 
-//  $.each(keycodes, createKeyCodeUI);
+  //  $.each(keycodes, createKeyCodeUI);
 
- // var $keycodes = $('.keycode'); // wait until they are created
-//  $keycodes.each(makeDraggable);
+  // var $keycodes = $('.keycode'); // wait until they are created
+  //  $keycodes.each(makeDraggable);
 
   // click to assign keys to keymap
-  $visualKeymap.click(selectKeymapKey);
-  $('#keycodes').click(assignKeycodeToSelectedKey);
+  //$visualKeymap.click(selectKeymapKey);
+  //$('#keycodes').click(assignKeycodeToSelectedKey);
 
+  /*
   $layer.click(changeLayer);
 
   var offsetTop = $('.split-content').offset().top;
@@ -57,11 +58,13 @@ $(document).ready(() => {
   $(document).on('scroll', scrollHandler);
 
   // explicitly export functions to global namespace
+  */
 
   var vueStatus = checkStatus();
 
   Vue.use(VueRouter);
   Vue.use(Vuex);
+  Vue.use(VueDragDrop);
 
   var vueStore = newStore();
   var App = newApp(vueStore);
@@ -78,7 +81,9 @@ $(document).ready(() => {
   }).$mount('#controller-app');
 
   var keypressListener = new window.keypress.Listener();
-  keypressListener.register_many(generateKeypressCombos(vueStore.getters['keycodes/keycodes']));
+  keypressListener.register_many(
+    generateKeypressCombos(vueStore.getters['keycodes/keycodes'])
+  );
   keypressListener.simple_combo('ctrl shift i', () => {
     if (!vueStore.getters['app/isPreview']) {
       vueStore.commit('app/enablePreview');
@@ -112,7 +117,8 @@ $(document).ready(() => {
     let controllerTop = topControllerComponent(store);
     let statusPanel = statusPanelComponent(store);
     let controllerBottom = bottomControllerComponent(store);
-    let keycodes = keycodesCompoonent(store);
+    let splitContent = splitContentComponent(store);
+    let keycodesContainer = keycodesContainerComponent(store);
     return Vue.component('controller', {
       store,
       template: `
@@ -120,9 +126,18 @@ $(document).ready(() => {
       <controllerTop></controllerTop>
       <statusPanel></statusPanel>
       <controllerBottom></controllerBottom>
-      <keycodes />
-  </div>`,
-      components: { controllerTop, statusPanel, controllerBottom, keycodes }
+        <a class="hint" target="_blank" href="https://github.com/qmk/qmk_toolbox/releases">Download QMK Toolbox</a>
+      <splitContent></splitContent>
+      <keycodesContainer></keycodesContainer>
+</div>
+      `,
+      components: {
+        controllerTop,
+        statusPanel,
+        controllerBottom,
+        splitContent,
+        keycodesContainer,
+      }
     });
   }
 
@@ -281,7 +296,7 @@ $(document).ready(() => {
           state.jobID = jobID;
         },
         setEnableDownloads(state) {
-          state.enableDownloads = true;
+          etate.enableDownloads = true;
         },
         setDisableDownloads(state) {
           state.enableDownloads = false;
@@ -394,14 +409,35 @@ $(document).ready(() => {
     return {
       namespaced: true,
       state: {
-        keycodes: getKeycodes(),
+        keycodes: getKeycodes()
       },
       getters: {
-        keycodes: state => state.keycodes,
+        keycodes: state => state.keycodes
       },
-      actions: {
+      actions: {},
+      mutations: {}
+    };
+  }
+
+  function initVisualKeysStore() {
+    return {
+      namespaced: true,
+      state: {
+        layout: [],
+        dimensions: {}
       },
+      getters: {
+        layout: state => state.layout,
+        dimensions: state => state.dimensions
+      },
+      actions: {},
       mutations: {
+        setLayout(state, _layout) {
+          state.layout = _layout;
+        },
+        setDimensions(state, _dimensions) {
+          state.dimensions = _dimensions;
+        }
       }
     };
   }
@@ -416,12 +452,111 @@ $(document).ready(() => {
         app: initAppStore(),
         status: initStatusStore(),
         keycodes: initKeycodesStore(),
+        visualKeys: initVisualKeysStore()
       },
       strict: true
     });
   }
 
-  function keycodesCompoonent(store) {
+  function layersComponent() {
+    return Vue.component('layers', {
+      template: `
+    <div id="layers">
+      <div class="layer 15">15</div>
+      <div class="layer 14">14</div>
+      <div class="layer 13">13</div>
+      <div class="layer 12">12</div>
+      <div class="layer 11">11</div>
+      <div class="layer 10">10</div>
+      <div class="layer 9">9</div>
+      <div class="layer 8">8</div>
+      <div class="layer 7">7</div>
+      <div class="layer 6">6</div>
+      <div class="layer 5">5</div>
+      <div class="layer 4">4</div>
+      <div class="layer 3">3</div>
+      <div class="layer 2">2</div>
+      <div class="layer 1">1</div>
+      <div class="layer active 0">0</div>
+    </div>`
+    });
+  }
+
+  function keycodesContainerComponent(store) {
+    let keycodes = keycodesComponent(store);
+    return Vue.component('keycodes-container', {
+      component: { keycodes },
+      template: `
+  <div>
+    <p style="clear:both" id="keycodes-section">
+    <label>Keycodes:</label>
+    <p class="hint"><a href="https://docs.qmk.fm/#/keycodes" title="Keycodes reference" target="_blank">Keycodes reference</a></p>
+      <keycodes></keycodes>
+    </p>
+    </div>
+    `
+    });
+  }
+
+  function splitContentComponent(store) {
+    let layers = layersComponent(store);
+    let visualKeymap = visualKeymapComponent(store);
+    return Vue.component('split-content', {
+      components: {
+        layers,
+        visualKeymap
+      },
+      template: `
+  <div class="split-content">
+    <div class="left-side">
+      <p><label>Layer:</label></p>
+      <layers></layers>
+    </div>
+    <div class="right-side">
+      <p><label>Keymap:</label></p>
+      <visualKeymap></visualKeymap>
+    </div>
+  </div>`
+    });
+  }
+
+  function visualKeymapComponent(store) {
+    let keyC = keyComponent(store);
+    return Vue.component('visual-keymap', {
+      component: { keyC },
+      template: `
+      <div id="visual-keymap" :style="dimensions">
+        <key v-for="key in layout" :config="key" :key="key.code"></key>
+      </div>
+      `,
+      computed: {
+        layout: () => store.getters['visualKeys/layout'],
+        dimensions: () => store.getters['visualKeys/dimensions']
+      }
+    });
+  }
+
+  function keyComponent(store) {
+    return Vue.component('key', {
+      template: `
+      <drop class="drop"
+            :class="config.class"
+            :style="config.style"
+            :id="config.id"
+            :data-index="config.dataIndex"
+            :data-w="config.dataW"
+            :data-h="config.dataH"
+            :dataType="config.dataType"
+      >
+      </drop>
+      `,
+      props: {
+        config: Object
+      }
+    });
+  }
+
+  function keycodesComponent(store) {
     let keycode = keycodeComponent(store);
     return Vue.component('keycodes', {
       components: { keycode },
@@ -433,8 +568,9 @@ $(document).ready(() => {
       computed: {
         keycodes() {
           return store.getters['keycodes/keycodes'];
-        },
+        }
       },
+      methods: {}
     });
   }
 
@@ -442,6 +578,7 @@ $(document).ready(() => {
     return Vue.component('keycode', {
       template: `
       <drag :transfer-data="transferdata"
+            class="drag"
             :class="classObject"
             :data-code="code"
             :data-type="type"
@@ -449,27 +586,33 @@ $(document).ready(() => {
         >{{keycode.name}}</drag>
       `,
       props: {
-        keycode: Object,
+        keycode: Object
       },
       computed: {
         classObject() {
-           let isSpace = _.isUndefined(this.keycode.code);
-           return {
-             keycode: !isSpace,
-             ['keycode-' + this.width]: !isSpace && this.width,
-             ['keycode-' + this.type]: !isSpace && this.type,
-             space: isSpace,
-             ['space-' + this.keycode.width]: isSpace,
-           };
+          let isSpace = _.isUndefined(this.keycode.code);
+          return {
+            keycode: !isSpace,
+            ['keycode-' + this.width]: !isSpace && this.width,
+            ['keycode-' + this.type]: !isSpace && this.type,
+            space: isSpace,
+            ['space-' + this.keycode.width]: isSpace
+          };
         },
         code() {
-          return _.isUndefined(this.keycode.code) ? undefined : this.keycode.code;
+          return _.isUndefined(this.keycode.code)
+            ? undefined
+            : this.keycode.code;
         },
         type() {
-          return _.isUndefined(this.keycode.type) ? undefined : this.keycode.type;
+          return _.isUndefined(this.keycode.type)
+            ? undefined
+            : this.keycode.type;
         },
         width() {
-          return _.isUndefined(this.keycode.width) ? undefined: this.keycode.width;
+          return _.isUndefined(this.keycode.width)
+            ? undefined
+            : this.keycode.width;
         },
         transferdata() {
           return this.keycode;
@@ -1262,7 +1405,6 @@ $(document).ready(() => {
     });
   }
 
-
   function calcKeyKeymapDims(w, h) {
     return {
       w: w * config.KEY_X_SPACING - (config.KEY_X_SPACING - config.KEY_WIDTH),
@@ -1278,7 +1420,7 @@ $(document).ready(() => {
   }
 
   function render_layout(_layout) {
-    $visualKeymap.find('*').remove();
+    // $visualKeymap.find('*').remove();
 
     var max = { x: 0, y: 0 };
 
@@ -1308,7 +1450,7 @@ $(document).ready(() => {
       max.y *= config.SCALE;
     }
 
-    $.each(_layout, function(k, d) {
+    let visualLayout = _layout.map((d, k) => {
       if (!d.w) {
         d.w = 1;
       }
@@ -1317,7 +1459,7 @@ $(document).ready(() => {
       }
       var pos = calcKeyKeymapPos(d.x, d.y);
       var dims = calcKeyKeymapDims(d.w, d.h);
-      var key = $('<div>', {
+      return {
         class: 'key disabled',
         style: [
           'left: ',
@@ -1331,21 +1473,28 @@ $(document).ready(() => {
           'px'
         ].join(''),
         id: 'key-' + k,
-        'data-index': k,
-        'data-type': 'key',
-        'data-w': d.w,
-        'data-h': d.h
-      });
-      $(key).droppable(droppable_config(key, k));
-      $visualKeymap.append(key);
-      render_key(layer, k);
+        dataIndex: k,
+        dataType: 'key',
+        dataW: d.w,
+        dataH: d.h
+      };
+      //      $(key).droppable(droppable_config(key, k));
+      //      $visualKeymap.append(key);
+      //      render_key(layer, k);
     });
+    vueStore.commit('visualKeys/setLayout', visualLayout);
+    vueStore.commit('visualKeys/setDimensions', {
+      width: max.x + 'px',
+      height: max.y + 'px'
+    });
+    /*
     $visualKeymap.css({
       width: max.x + 'px',
       height: max.y + 'px'
     });
 
     $('.key').each(makeDraggable);
+    */
   }
 
   function statusError(message) {

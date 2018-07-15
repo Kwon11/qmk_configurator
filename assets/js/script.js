@@ -32,10 +32,6 @@ $(document).ready(() => {
 
   var myKeymap = new Keymap(layer);
 
-  //var $layer = $('.layer');
-
-  //var $visualKeymap = $('#visual-keymap');
-
   var lookupKeycode = _.memoize(lookupKeycode); // cache lookups
 
   //  var keycodes = getKeycodes();
@@ -136,7 +132,7 @@ $(document).ready(() => {
         statusPanel,
         controllerBottom,
         splitContent,
-        keycodesContainer,
+        keycodesContainer
       }
     });
   }
@@ -424,11 +420,13 @@ $(document).ready(() => {
       namespaced: true,
       state: {
         layout: [],
-        dimensions: {}
+        dimensions: {},
+        selected: undefined
       },
       getters: {
         layout: state => state.layout,
-        dimensions: state => state.dimensions
+        dimensions: state => state.dimensions,
+        selected: state => state.selected
       },
       actions: {},
       mutations: {
@@ -437,6 +435,9 @@ $(document).ready(() => {
         },
         setDimensions(state, _dimensions) {
           state.dimensions = _dimensions;
+        },
+        setSelected(state, id) {
+          state.selected = id;
         }
       }
     };
@@ -526,7 +527,10 @@ $(document).ready(() => {
       component: { keyC },
       template: `
       <div id="visual-keymap" :style="dimensions">
-        <key v-for="key in layout" :config="key" :key="key.code"></key>
+        <key v-for="key in layout"
+             :config="key"
+             :key="key.code"
+        ></key>
       </div>
       `,
       computed: {
@@ -539,19 +543,45 @@ $(document).ready(() => {
   function keyComponent(store) {
     return Vue.component('key', {
       template: `
-      <drop class="drop"
-            :class="config.class"
+      <div @click="clicked">
+        <drop class="drop"
+            :class="classObject"
             :style="config.style"
             :id="config.id"
             :data-index="config.dataIndex"
             :data-w="config.dataW"
             :data-h="config.dataH"
             :dataType="config.dataType"
-      >
-      </drop>
+            :data-selected="selected"
+        >
+        </drop>
+      </div>
       `,
       props: {
         config: Object
+      },
+      computed: {
+        selected: () => store.getters['visualKeys/selected'],
+        classObject() {
+          let clazz = this.clazz.reduce(
+            (acc, cl) => {
+              acc[cl] = true;
+              return acc;
+            },
+            { 'keycode-select': this.selected === this.config.id }
+          );
+          return clazz;
+        }
+      },
+      data() {
+        return {
+          clazz: this.config.class.split(' ')
+        };
+      },
+      methods: {
+        clicked() {
+          store.commit('visualKeys/setSelected', this.config.id);
+        }
       }
     });
   }
@@ -583,6 +613,9 @@ $(document).ready(() => {
             :data-code="code"
             :data-type="type"
             :title="code"
+            @dragstart="start"
+            @drag="drag"
+            @dragend="end"
         >{{keycode.name}}</drag>
       `,
       props: {
@@ -616,6 +649,17 @@ $(document).ready(() => {
         },
         transferdata() {
           return this.keycode;
+        }
+      },
+      methods: {
+        start() {
+          console.log('start');
+        },
+        drag() {
+          console.log('drag');
+        },
+        end() {
+          console.log('stop');
         }
       }
     });
@@ -1292,7 +1336,7 @@ $(document).ready(() => {
   }
 
   function getSelectedKey() {
-    return $visualKeymap.find('.key.keycode-select');
+    return vueStore.getters['keycodes/selected'];
   }
 
   function selectKeymapKey(evt) {

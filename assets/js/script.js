@@ -419,6 +419,7 @@ $(document).ready(() => {
     return {
       namespaced: true,
       state: {
+        layer: 0,
         layout: [],
         dimensions: {},
         selected: undefined
@@ -428,7 +429,26 @@ $(document).ready(() => {
         dimensions: state => state.dimensions,
         selected: state => state.selected
       },
-      actions: {},
+      actions: {
+        clicked({ state, commit }, code) {
+          console.log(code);
+          if (_.isUndefined(state.selected)) {
+            return;
+          }
+          let keycode = lookupKeycode(code);
+          commit('setKey', { index: state.selected, keycode });
+          commit('setSelected', state.selected);
+        },
+        pressed({ state, commit }, code) {
+          console.log(code);
+          if (_.isUndefined(state.selected)) {
+            return;
+          }
+          let keycode = lookupKeycode(code);
+          commit('setKey', { index: state.selected, keycode });
+          commit('setSelected', state.selected);
+        }
+      },
       mutations: {
         setLayout(state, _layout) {
           state.layout = _layout;
@@ -437,7 +457,14 @@ $(document).ready(() => {
           state.dimensions = _dimensions;
         },
         setSelected(state, id) {
-          state.selected = id;
+          if (state.selected === id) {
+            state.selected = undefined;
+          } else {
+            state.selected = id;
+          }
+        },
+        setKey(state, { index, keycode }) {
+          state.layout[index].name = keycode.name;
         }
       }
     };
@@ -553,8 +580,7 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
-        >
-        </drop>
+        >{{config.name}}</drop>
       </div>
       `,
       props: {
@@ -568,19 +594,19 @@ $(document).ready(() => {
               acc[cl] = true;
               return acc;
             },
-            { 'keycode-select': this.selected === this.config.id }
+            { 'keycode-select': this.selected === this.config.dataIndex }
           );
           return clazz;
         }
       },
       data() {
         return {
-          clazz: this.config.class.split(' ')
+          clazz: this.config.class
         };
       },
       methods: {
         clicked() {
-          store.commit('visualKeys/setSelected', this.config.id);
+          store.commit('visualKeys/setSelected', this.config.dataIndex);
         }
       }
     });
@@ -649,8 +675,8 @@ $(document).ready(() => {
           return {
             drag: !this.isSpace,
             'keycode-draggable': !this.isSpace,
-            ['keycode-' + this.type]: !this.isSpace && this.type,
-          }
+            ['keycode-' + this.type]: !this.isSpace && this.type
+          };
         },
         code() {
           return _.isUndefined(this.keycode.code)
@@ -682,7 +708,7 @@ $(document).ready(() => {
           console.log('stop');
         },
         clicked() {
-          console.log('clicked');
+          store.dispatch('visualKeys/clicked', this.keycode.code);
         }
       }
     });
@@ -1309,6 +1335,8 @@ $(document).ready(() => {
           return;
         }
 
+        vueStore.dispatch('visualKeys/pressed', meta.code);
+        /*
         var $key = getSelectedKey();
         var _index = $key.data('index');
         if ($key === undefined || _index === undefined || !_.isNumber(_index)) {
@@ -1323,6 +1351,7 @@ $(document).ready(() => {
         $key.removeClass('keycode-select'); // clear selection once assigned
         render_key(layer, _index);
         myKeymap.setDirty();
+        */
       }
     };
   }
@@ -1527,7 +1556,7 @@ $(document).ready(() => {
       var pos = calcKeyKeymapPos(d.x, d.y);
       var dims = calcKeyKeymapDims(d.w, d.h);
       return {
-        class: 'key disabled',
+        class: ['key', 'disabled'],
         style: [
           'left: ',
           pos.x,
@@ -1543,7 +1572,8 @@ $(document).ready(() => {
         dataIndex: k,
         dataType: 'key',
         dataW: d.w,
-        dataH: d.h
+        dataH: d.h,
+        keycode: ''
       };
       //      $(key).droppable(droppable_config(key, k));
       //      $visualKeymap.append(key);

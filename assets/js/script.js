@@ -608,7 +608,7 @@ $(document).ready(() => {
     return Vue.component('keycode', {
       template: `
       <drag :transfer-data="transferdata"
-            class="drag"
+            :draggable="!isSpace"
             :class="classObject"
             :data-code="code"
             :data-type="type"
@@ -616,20 +616,32 @@ $(document).ready(() => {
             @dragstart="start"
             @drag="drag"
             @dragend="end"
-        >{{keycode.name}}</drag>
+        >{{legend}}</drag>
       `,
       props: {
         keycode: Object
       },
       computed: {
+        legend() {
+          if (this.keycode.label) {
+            return this.keycode.label;
+          }
+          if (this.isSpace) {
+            return '';
+          }
+          return this.keycode.name;
+        },
+        isSpace() {
+          return _.isUndefined(this.keycode.code);
+        },
         classObject() {
-          let isSpace = _.isUndefined(this.keycode.code);
           return {
-            keycode: !isSpace,
-            ['keycode-' + this.width]: !isSpace && this.width,
-            ['keycode-' + this.type]: !isSpace && this.type,
-            space: isSpace,
-            ['space-' + this.keycode.width]: isSpace
+            drag: !this.isSpace,
+            keycode: !this.isSpace,
+            ['keycode-' + this.width]: !this.isSpace && this.width,
+            ['keycode-' + this.type]: !this.isSpace && this.type,
+            space: this.isSpace,
+            ['space-' + this.keycode.width]: this.isSpace
           };
         },
         code() {
@@ -2072,7 +2084,7 @@ $(document).ready(() => {
 
       { label: 'QMK specific', width: 'label' },
 
-      { name: '', code: 'KC_NO', title: 'Nothing' },
+      { name: 'N/A', code: 'KC_NO', title: 'Nothing' },
       { name: '▽', code: 'KC_TRNS', title: 'Pass-through' },
       { name: 'Reset', code: 'RESET', title: 'Reset the keyboard' },
       { name: 'Debug', code: 'DEBUG', title: 'Toggle debug mode' },

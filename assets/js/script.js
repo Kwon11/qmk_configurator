@@ -580,6 +580,7 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
+            @drop="dropped"
         >{{config.name}}</drop>
       </div>
       `,
@@ -607,6 +608,11 @@ $(document).ready(() => {
       methods: {
         clicked() {
           store.commit('visualKeys/setSelected', this.config.dataIndex);
+        },
+        dropped(data) {
+          console.log('dropped ', data);
+          store.commit('visualKeys/setSelected', this.config.dataIndex);
+          store.dispatch('visualKeys/clicked', data.code);
         }
       }
     });
@@ -674,6 +680,8 @@ $(document).ready(() => {
         dragClassObject() {
           return {
             drag: !this.isSpace,
+            'keycode-container': this.type === 'container',
+            'keycode-layer': this.type === 'layer' || this.type === 'text',
             'keycode-draggable': !this.isSpace,
             ['keycode-' + this.type]: !this.isSpace && this.type
           };
@@ -702,7 +710,6 @@ $(document).ready(() => {
           console.log('start');
         },
         drag() {
-          console.log('drag');
         },
         end() {
           console.log('stop');

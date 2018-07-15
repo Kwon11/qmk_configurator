@@ -982,6 +982,7 @@ button {
   cursor: grab;
   cursor: -moz-grab;
   cursor: -webkit-grab;
+  position: relative; /* used for keycode-draggable[title] */
 }
 
 .keycode:active {
@@ -1017,7 +1018,7 @@ button {
   display: block;
 }
 
-.keycode[title]:before {
+.keycode-draggable[title]:before {
   content: '';
   position: absolute;
   right: 0px;

@@ -639,7 +639,6 @@ $(document).ready(() => {
         },
         classObject() {
           return {
-            drag: !this.isSpace,
             keycode: !this.isSpace,
             ['keycode-' + this.width]: !this.isSpace && this.width,
             space: this.isSpace,
@@ -648,6 +647,7 @@ $(document).ready(() => {
         },
         dragClassObject() {
           return {
+            drag: !this.isSpace,
             'keycode-draggable': !this.isSpace,
             ['keycode-' + this.type]: !this.isSpace && this.type,
           }

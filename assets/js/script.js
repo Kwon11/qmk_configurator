@@ -607,9 +607,11 @@ $(document).ready(() => {
   function keycodeComponent(store) {
     return Vue.component('keycode', {
       template: `
-      <drag :transfer-data="transferdata"
+      <div :class="classObject"
+           @click="clicked">
+      <drag :class="dragClassObject"
+            :transfer-data="transferdata"
             :draggable="!isSpace"
-            :class="classObject"
             :data-code="code"
             :data-type="type"
             :title="code"
@@ -617,6 +619,7 @@ $(document).ready(() => {
             @drag="drag"
             @dragend="end"
         >{{legend}}</drag>
+      </div>
       `,
       props: {
         keycode: Object
@@ -639,10 +642,15 @@ $(document).ready(() => {
             drag: !this.isSpace,
             keycode: !this.isSpace,
             ['keycode-' + this.width]: !this.isSpace && this.width,
-            ['keycode-' + this.type]: !this.isSpace && this.type,
             space: this.isSpace,
             ['space-' + this.keycode.width]: this.isSpace
           };
+        },
+        dragClassObject() {
+          return {
+            'keycode-draggable': !this.isSpace,
+            ['keycode-' + this.type]: !this.isSpace && this.type,
+          }
         },
         code() {
           return _.isUndefined(this.keycode.code)
@@ -672,6 +680,9 @@ $(document).ready(() => {
         },
         end() {
           console.log('stop');
+        },
+        clicked() {
+          console.log('clicked');
         }
       }
     });
@@ -2419,7 +2430,7 @@ $(document).ready(() => {
 
       { label: 'Multimedia Keys', width: 'label' },
 
-      { name: 'Previous', code: 'KC_MPRV', title: 'Media Previous' },
+      { name: 'Prev', code: 'KC_MPRV', title: 'Media Previous' },
       { name: 'Next', code: 'KC_MNXT', title: 'Media Next' },
       { name: 'Mute', code: 'KC_MUTE', title: 'Mute Audio' },
       { name: 'Vol -', code: 'KC_VOLD', title: 'Volume Down' },

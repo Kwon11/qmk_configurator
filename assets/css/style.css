@@ -947,7 +947,7 @@ button {
 #keycodes {
   display: grid;
   width: 860px;
-  grid-gap: 0.25px;
+  grid-gap: 0.45px;
   grid-template: repeat(30, 38px) / repeat(92, 9px);
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -961,25 +961,27 @@ button {
 .keycode {
   grid-column: span 4;
   margin: 0px 5px 5px 0px;
-  border: #ccc 1px solid;
-  border-radius: 2px;
   box-sizing: border-box;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  text-align: center;
   user-select: none;
+  background: #fff;
+  line-height: 11px;
+  white-space: pre-line;
+}
+
+.keycode-draggable {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 65%;
+  border-radius: 2px;
+  border: #ccc 1px solid;
+  width: 100%;
+  height: 100%;
+  text-align: center;
   cursor: move; /* fallback if grab cursor is unsupported */
   cursor: grab;
   cursor: -moz-grab;
   cursor: -webkit-grab;
-  background: #fff;
-  float: left;
-  font-size: 70%;
-  line-height: 11px;
-  white-space: pre-line;
-  padding: 1px;
-  position: relative;
 }
 
 .keycode:active {
@@ -993,7 +995,7 @@ button {
   transform: scale(.8);*/
 }
 
-.keycode:empty:after {
+.keycode-draggable:empty:after {
   content: 'N/A';
 }
 
@@ -1011,7 +1013,7 @@ button {
   border-radius: 2px;
   border: 1px solid #ccc;
   background: #eee;
-  margin: 0px auto;
+  margin: 2px auto;
   display: block;
 }
 

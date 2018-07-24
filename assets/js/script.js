@@ -48,13 +48,11 @@ $(document).ready(() => {
   /*
   $layer.click(changeLayer);
 
-  var offsetTop = $('.split-content').offset().top;
-  var height = $('.split-content').height();
 
-  $(document).on('scroll', scrollHandler);
 
   // explicitly export functions to global namespace
   */
+  $(document).on('scroll', scrollHandler);
 
   var vueStatus = checkStatus();
 
@@ -292,7 +290,7 @@ $(document).ready(() => {
           state.jobID = jobID;
         },
         setEnableDownloads(state) {
-          etate.enableDownloads = true;
+          state.enableDownloads = true;
         },
         setDisableDownloads(state) {
           state.enableDownloads = false;
@@ -709,8 +707,7 @@ $(document).ready(() => {
         start() {
           console.log('start');
         },
-        drag() {
-        },
+        drag() {},
         end() {
           console.log('stop');
         },
@@ -719,27 +716,6 @@ $(document).ready(() => {
         }
       }
     });
-  }
-
-  function createKeyCodeUI(k, d) {
-    if (d.code) {
-      var help = d.title ? ` - ${d.title}` : '';
-      var keycode = $('<div>', {
-        class: 'keycode keycode-' + d.width + ' keycode-' + d.type,
-        'data-code': d.code,
-        'data-type': d.type,
-        html: d.name,
-        title: `${d.code}${help}`
-      });
-      $('#keycodes').append(keycode);
-    } else {
-      $('#keycodes').append(
-        $('<div>', {
-          class: 'space space-' + d.width,
-          html: d.label
-        })
-      );
-    }
   }
 
   function bottomControllerComponent(store) {
@@ -1398,15 +1374,9 @@ $(document).ready(() => {
     return vueStore.getters['keycodes/selected'];
   }
 
-  function selectKeymapKey(evt) {
-    var $target = $(evt.target);
-    getSelectedKey().removeClass('keycode-select');
-    if ($target.hasClass('key')) {
-      $target.addClass('keycode-select');
-    }
-  }
-
   function scrollHandler() {
+    var offsetTop = $('.split-content').offset().top;
+    var height = $('.split-content').height();
     if (offsetTop < $(document).scrollTop()) {
       $('.split-content').addClass('fixed');
       $('#keycodes-section').css('margin-top', height + 'px');

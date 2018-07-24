@@ -74,6 +74,9 @@ $(document).ready(() => {
     router: vueRouter
   }).$mount('#controller-app');
 
+  var offsetTop = $('.split-content').offset().top;
+  var height = $('.split-content').height();
+
   var keypressListener = new window.keypress.Listener();
   keypressListener.register_many(
     generateKeypressCombos(vueStore.getters['keycodes/keycodes'])
@@ -1375,8 +1378,6 @@ $(document).ready(() => {
   }
 
   function scrollHandler() {
-    var offsetTop = $('.split-content').offset().top;
-    var height = $('.split-content').height();
     if (offsetTop < $(document).scrollTop()) {
       $('.split-content').addClass('fixed');
       $('#keycodes-section').css('margin-top', height + 'px');

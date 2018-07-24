@@ -466,6 +466,8 @@ $(document).ready(() => {
         },
         setKey(state, { index, keycode }) {
           state.layout[index].name = keycode.name;
+          state.layout[index].type = keycode.type;
+          state.layout[index].keycode = keycode.code;
         }
       }
     };
@@ -581,8 +583,14 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
-            @drop="dropped"
-        >{{config.name}}</drop>
+            @drop="dropped">{{config.name}}<!--
+            --><div v-if="config.type === 'container'"
+                    class="key-contents">
+               </div><!--
+            --><div v-if="config.type === 'layer'"
+                    class="key-layer">
+               </div>
+        </drop>
       </div>
       `,
       props: {
@@ -596,7 +604,11 @@ $(document).ready(() => {
               acc[cl] = true;
               return acc;
             },
-            { 'keycode-select': this.selected === this.config.dataIndex }
+            {
+              'keycode-select': this.selected === this.config.dataIndex,
+              'key-container': this.config.type === 'container',
+              'empty': this.config.keycode === 'KC_NO',
+            }
           );
           return clazz;
         }
@@ -1551,7 +1563,7 @@ $(document).ready(() => {
         dataType: 'key',
         dataW: d.w,
         dataH: d.h,
-        keycode: ''
+        keycode: 'KC_NO'
       };
       //      $(key).droppable(droppable_config(key, k));
       //      $visualKeymap.append(key);

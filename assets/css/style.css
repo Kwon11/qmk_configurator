@@ -864,11 +864,11 @@ button {
   cursor: pointer;
 }
 
-.key:empty {
+.key.empty {
   background: #eee;
 }
 
-.key:empty:before {
+.key.empty:before {
   content: 'N/A';
   color: #ccc;
 }

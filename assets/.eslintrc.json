@@ -11,8 +11,8 @@
     "Vue": true,
     "Vuex": true,
     "VueRouter": true,
-    "axios": true
-    "VueDragDrop": true,
+    "axios": true,
+    "VueDragDrop": true
   },
   "rules": {
     "block-scoped-var": 2,

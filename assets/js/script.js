@@ -1904,14 +1904,14 @@ $(document).ready(() => {
 
   function render_key(_layer, k) {
     var key = $('#key-' + k);
-    var keycode = myKeymap.getKey(_layer, k);
+    var keycode = mykeymap.getkey(_layer, k);
     if (!keycode) {
-      let { name, code } = lookupKeycode('KC_NO');
-      keycode = myKeymap.assignKey(_layer, k, name, code, '');
+      let { name, code } = lookupkeycode('kc_no');
+      keycode = mykeymap.assignkey(_layer, k, name, code, '');
     }
     $(key).html(keycode.name);
     if (keycode.type === 'container') {
-      $(key).addClass('key-container');
+      $(key).addclass('key-container');
       var container = $('<div>', {
         class: 'key-contents'
       });
@@ -1921,7 +1921,7 @@ $(document).ready(() => {
       $(container).droppable(droppable_config(container, k));
       $(key).append(container);
     } else if (keycode.type === 'layer') {
-      $(key).addClass('key-layer');
+      $(key).addclass('key-layer');
       $(key).append($('<br/>'));
       var layer_input1 = $('<input>', {
         class: 'key-layer-input',
@@ -1929,36 +1929,36 @@ $(document).ready(() => {
         val: keycode.layer
       }).on('input', function() {
         var val = $(this).val();
-        var toLayer = parseInt(val, 10);
-        if (_.isNumber(toLayer)) {
-          myKeymap.setKeycodeLayer(_layer, k, toLayer);
-          setLayerToNonEmpty(toLayer);
+        var tolayer = parseint(val, 10);
+        if (_.isnumber(tolayer)) {
+          mykeymap.setkeycodelayer(_layer, k, tolayer);
+          setlayertononempty(tolayer);
         }
       });
-      ignoreKeypressListener(layer_input1);
+      ignorekeypresslistener(layer_input1);
       $(key).append(layer_input1);
     } else if (keycode.type === 'text') {
-      $(key).addClass('key-layer');
+      $(key).addclass('key-layer');
       var layer_input = $('<input>', {
         class: 'key-layer-input',
         val: keycode.text
       }).on('input', function(/*e*/) {
-        myKeymap.setText(layer, k, $(this).val());
+        mykeymap.settext(layer, k, $(this).val());
       });
-      ignoreKeypressListener(layer_input);
+      ignorekeypresslistener(layer_input);
       $(key).append(layer_input);
     } else {
-      $(key).removeClass('key-container');
-      $(key).removeClass('key-layer');
+      $(key).removeclass('key-container');
+      $(key).removeclass('key-layer');
     }
-    if (keycode.code !== 'KC_NO') {
+    if (keycode.code !== 'kc_no') {
       var remove_keycode = $('<div>', {
         class: 'remove',
         html: '&#739;',
         click: function(evt) {
-          evt.preventDefault();
-          evt.stopPropagation();
-          myKeymap.assignKey(layer, k, '', 'KC_NO', '');
+          evt.preventdefault();
+          evt.stoppropagation();
+          mykeymap.assignkey(layer, k, '', 'kc_no', '');
           render_key(layer, k);
         }
       });

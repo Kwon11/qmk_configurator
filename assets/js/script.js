@@ -88,12 +88,6 @@ $(document).ready(() => {
     }
   });
 
-  var ignoreKeypressListener = _.partial(
-    ignoreKeypressListener,
-    keypressListener
-  );
-
-  ignoreKeypressListener($('input[type=text]'));
   return {
     vueStatus,
     vueInstance
@@ -448,7 +442,13 @@ $(document).ready(() => {
           let keycode = lookupKeycode(code);
           commit('setKey', { index: state.selected, keycode });
           commit('setSelected', state.selected);
-        }
+        },
+        stopListening() {
+          keypressListener.stop_listening();
+        },
+        startListening() {
+          keypressListener.listen();
+        },
       },
       mutations: {
         setLayout(state, _layout) {
@@ -588,10 +588,10 @@ $(document).ready(() => {
       ></div>`,
       methods: {
         stopListening() {
-          keypressListener.stop_listening();
+          store.dispatch('visualKeys/stopListening');
         },
         startListening() {
-          keypressListener.listen();
+          store.dispatch('visualKeys/startListening');
         }
       },
     });
@@ -790,12 +790,16 @@ $(document).ready(() => {
              type="file"
              ref="fileImportElement"
              accept="application/json"
+             @focus="stopListening"
+             @blur="startListening"
              @change="fileImportChanged"
       />
       <input id="infoPreview"
              type="file"
              accept="application/json"
              ref="infoPreviewElement"
+             @focus="stopListening"
+             @blur="startListening"
              @change="infoPreviewChanged"
       />
     </div>
@@ -833,6 +837,12 @@ $(document).ready(() => {
         }
       },
       methods: {
+        stopListening() {
+          store.dispatch('visualKeys/stopListening');
+        },
+        startListening() {
+          store.dispatch('visualKeys/startListening');
+        },
         exportJSON() {
           //Squashes the keymaps to the api payload format, might look into making this a function
           var layers = myKeymap.exportLayers({ compiler: false });
@@ -1049,7 +1059,13 @@ $(document).ready(() => {
       </span>
       <span class="topctrl-2">
         <label id="keymap-name-label">Keymap Name:</label>
-        <input id="keymap-name" type="text" v-model="keymapName" placeholder="custom keymap name"/>
+        <input id="keymap-name"
+               type="text"
+               v-model="keymapName"
+               placeholder="custom keymap name"
+               @focus="stopListening"
+               @blur="startListening"
+               />
       </span>
       <span class="topctrl-3">
       <button id="load-default"
@@ -1147,6 +1163,12 @@ $(document).ready(() => {
         }
       },
       methods: {
+        stopListening() {
+          store.dispatch('visualKeys/stopListening');
+        },
+        startListening() {
+          store.dispatch('visualKeys/startListening');
+        },
         /**
          * loadDefault keymap. Attempts to load the keymap data from
          * a predefined known file path.
@@ -1340,12 +1362,6 @@ $(document).ready(() => {
       template: '<div><statusBar></statusBar></div>',
       components: { statusBar }
     });
-  }
-
-  function ignoreKeypressListener(listener, $element) {
-    $element
-      .focus(() => listener.stop_listening())
-      .blur(() => listener.listen());
   }
 
   // generate keypress combo list from the keycodes list
@@ -1970,7 +1986,7 @@ $(document).ready(() => {
           setlayertononempty(tolayer);
         }
       });
-      ignorekeypresslistener(layer_input1);
+      //ignorekeypresslistener(layer_input1);
       $(key).append(layer_input1);
     } else if (keycode.type === 'text') {
       $(key).addclass('key-layer');
@@ -1980,7 +1996,7 @@ $(document).ready(() => {
       }).on('input', function(/*e*/) {
         mykeymap.settext(layer, k, $(this).val());
       });
-      ignorekeypresslistener(layer_input);
+      //ignorekeypresslistener(layer_input);
       $(key).append(layer_input);
     } else {
       $(key).removeclass('key-container');

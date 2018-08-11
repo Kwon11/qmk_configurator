@@ -581,9 +581,19 @@ $(document).ready(() => {
       template: `<div>
       <input
         type="number"
+        @focus="stopListening"
+        @blur="startListening"
         class="key-layer-input"
         val="0"
-      ></div>`
+      ></div>`,
+      methods: {
+        stopListening() {
+          keypressListener.stop_listening();
+        },
+        startListening() {
+          keypressListener.listen();
+        }
+      },
     });
   }
 

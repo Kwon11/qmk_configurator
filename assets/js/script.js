@@ -570,6 +570,23 @@ $(document).ready(() => {
     });
   }
 
+  function containerKeyComponent(store) {
+    return Vue.component('container-key', {
+      template: `<div class="key-contents"></div>`
+    });
+  }
+
+  function layerKeyComponent(store) {
+    return Vue.component('layer-key', {
+      template: `<div>
+      <input
+        type="number"
+        class="key-layer-input"
+        val="0"
+      ></div>`
+    });
+  }
+
   function keyComponent(store) {
     return Vue.component('key', {
       template: `
@@ -583,18 +600,15 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
-            @drop="dropped">{{config.name}}<!--
-            --><div v-if="config.type === 'container'"
-                    class="key-contents">
-               </div><!--
-            --><div v-if="config.type === 'layer'"
-                    class="key-layer">
-               </div>
-        </drop>
+            @drop="dropped">{{config.name}}<div v-if="config.type" v-bind:is="innerType(config.type)"></div></drop>
       </div>
       `,
       props: {
         config: Object
+      },
+      components: {
+        containerKey: containerKeyComponent(store),
+        layerKey: layerKeyComponent(store)
       },
       computed: {
         selected: () => store.getters['visualKeys/selected'],
@@ -607,7 +621,8 @@ $(document).ready(() => {
             {
               'keycode-select': this.selected === this.config.dataIndex,
               'key-container': this.config.type === 'container',
-              'empty': this.config.keycode === 'KC_NO',
+              'key-layer': this.config.type === 'layer',
+              empty: this.config.keycode === 'KC_NO'
             }
           );
           return clazz;
@@ -619,6 +634,16 @@ $(document).ready(() => {
         };
       },
       methods: {
+        innerType: type => {
+          switch (type) {
+            case 'container':
+              return 'containerKey';
+            case 'layer':
+              return 'layerKey';
+            default:
+              return '';
+          }
+        },
         clicked() {
           store.commit('visualKeys/setSelected', this.config.dataIndex);
         },

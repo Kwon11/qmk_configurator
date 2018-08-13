@@ -448,7 +448,7 @@ $(document).ready(() => {
         },
         startListening() {
           keypressListener.listen();
-        },
+        }
       },
       mutations: {
         setLayout(state, _layout) {
@@ -468,6 +468,16 @@ $(document).ready(() => {
           state.layout[index].name = keycode.name;
           state.layout[index].type = keycode.type;
           state.layout[index].keycode = keycode.code;
+          state.layout[index].layer = keycode.layer;
+        },
+        setLayerKey(state, toLayer) {
+          if (state.selected !== undefined) {
+            var _toLayer = parseInt(toLayer, 10);
+            console.log(state.selected, toLayer, _toLayer);
+            if (_.isNumber(_toLayer)) {
+              state.layout[state.selected].layer = _toLayer;
+            }
+          }
         }
       }
     };
@@ -572,7 +582,26 @@ $(document).ready(() => {
 
   function containerKeyComponent(store) {
     return Vue.component('container-key', {
-      template: `<div class="key-contents"></div>`
+      template: `<div class="key-contents">
+        <!--drop class="drop"
+            :class="classObject"
+            :style="config.style"
+            :id="config.id"
+            :data-index="config.dataIndex"
+            :data-w="config.dataW"
+            :data-h="config.dataH"
+            :dataType="config.dataType"
+            :data-selected="selected"
+            @drop="dropped">{{config.name}}
+        </drop-->
+      </div>`,
+      methods: {
+        dropped(data) {
+          console.log('dropped ', data);
+          store.commit('visualKeys/setSelected', this.config.dataIndex);
+          store.dispatch('visualKeys/clicked', data.code);
+        }
+      }
     });
   }
 
@@ -581,10 +610,12 @@ $(document).ready(() => {
       template: `<div>
       <input
         type="number"
-        @focus="stopListening"
-        @blur="startListening"
         class="key-layer-input"
         val="0"
+        @focus="stopListening"
+        @blur.prevent.stop="startListening"
+        @input="updateLayerKey"
+        v-model="layer"
       ></div>`,
       methods: {
         stopListening() {
@@ -592,8 +623,17 @@ $(document).ready(() => {
         },
         startListening() {
           store.dispatch('visualKeys/startListening');
+          store.commit('visualKeys/setSelected', undefined);
+        },
+        updateLayerKey() {
+          store.commit('visualKeys/setLayerKey', this.layer);
         }
       },
+      data() {
+        return {
+          layer: 0
+        };
+      }
     });
   }
 
@@ -610,6 +650,8 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
+            @dragenter="entered"
+            @dragleave="left"
             @drop="dropped">{{config.name}}<div v-if="config.type" v-bind:is="innerType(config.type)"></div></drop>
       </div>
       `,
@@ -632,7 +674,8 @@ $(document).ready(() => {
               'keycode-select': this.selected === this.config.dataIndex,
               'key-container': this.config.type === 'container',
               'key-layer': this.config.type === 'layer',
-              empty: this.config.keycode === 'KC_NO'
+              empty: this.config.keycode === 'KC_NO',
+              'active-key': this.over,
             }
           );
           return clazz;
@@ -640,10 +683,17 @@ $(document).ready(() => {
       },
       data() {
         return {
-          clazz: this.config.class
+          clazz: this.config.class,
+          over: false,
         };
       },
       methods: {
+        entered() {
+          this.over = true;
+        },
+        left() {
+          this.over = false;
+        },
         innerType: type => {
           switch (type) {
             case 'container':
@@ -659,6 +709,7 @@ $(document).ready(() => {
         },
         dropped(data) {
           console.log('dropped ', data);
+          this.over = false;
           store.commit('visualKeys/setSelected', this.config.dataIndex);
           store.dispatch('visualKeys/clicked', data.code);
         }

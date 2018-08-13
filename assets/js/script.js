@@ -650,7 +650,7 @@ $(document).ready(() => {
             :data-h="config.dataH"
             :dataType="config.dataType"
             :data-selected="selected"
-            @dragenter="entered"
+            @dragover="entered"
             @dragleave="left"
             @drop="dropped">{{config.name}}<div v-if="config.type" v-bind:is="innerType(config.type)"></div></drop>
       </div>

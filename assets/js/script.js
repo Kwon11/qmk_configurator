@@ -422,7 +422,8 @@ $(document).ready(() => {
       getters: {
         layout: state => state.layout,
         dimensions: state => state.dimensions,
-        selected: state => state.selected
+        selected: state => state.selected,
+        key: state => index => state.layout[index],
       },
       actions: {
         clicked({ state, commit }, code) {
@@ -478,7 +479,14 @@ $(document).ready(() => {
               state.layout[state.selected].layer = _toLayer;
             }
           }
-        }
+        },
+        clear(state, index) {
+          let keycode = lookupKeycode('KC_NO');
+          state.layout[index].name = keycode.name;
+          state.layout[index].type = keycode.type;
+          state.layout[index].keycode = keycode.code;
+          state.layout[index].layer = keycode.layer;
+        },
       }
     };
   }
@@ -568,7 +576,7 @@ $(document).ready(() => {
       template: `
       <div id="visual-keymap" :style="dimensions">
         <key v-for="key in layout"
-             :config="key"
+             :index="key.dataIndex"
              :key="key.code"
         ></key>
       </div>
@@ -637,35 +645,73 @@ $(document).ready(() => {
     });
   }
 
+  function textKeyComponent(store) {
+    return Vue.component('text-key', {
+      template: `<div>
+      <input
+        type="text"
+        class="key-layer-input"
+        val="0"
+        @focus="stopListening"
+        @blur.prevent.stop="startListening"
+        @input="updateTextKey"
+        v-model="text"
+      ></div>`,
+      methods: {
+        stopListening() {
+          store.dispatch('visualKeys/stopListening');
+        },
+        startListening() {
+          store.dispatch('visualKeys/startListening');
+          store.commit('visualKeys/setSelected', undefined);
+        },
+        updateTextKey() {
+          store.commit('visualKeys/setSelected', this.text);
+        }
+      },
+      data() {
+        return {
+          text: ''
+        };
+      }
+    });
+  }
+
   function keyComponent(store) {
     return Vue.component('key', {
       template: `
       <div @click="clicked">
         <drop class="drop"
-            :class="classObject"
-            :style="config.style"
-            :id="config.id"
-            :data-index="config.dataIndex"
-            :data-w="config.dataW"
-            :data-h="config.dataH"
-            :dataType="config.dataType"
-            :data-selected="selected"
-            @dragover="entered"
-            @dragleave="left"
-            @drop="dropped">{{config.name}}<div v-if="config.type" v-bind:is="innerType(config.type)"></div></drop>
+              :class="classObject"
+              :style="config.style"
+              :id="config.id"
+              :data-index="config.dataIndex"
+              :data-w="config.dataW"
+              :data-h="config.dataH"
+              :dataType="config.dataType"
+              :data-selected="selected"
+              @dragover="entered"
+              @dragleave="left"
+              @drop="dropped">{{name}}<div v-if="config.type" v-bind:is="innerType(config.type)"></div>
+              <div v-show="!isEmpty" class="remove" @click.prevent.stop.self="remove">&#739;</div>
+              </drop>
       </div>
       `,
       props: {
-        config: Object
+        index: Number
       },
       components: {
         containerKey: containerKeyComponent(store),
-        layerKey: layerKeyComponent(store)
+        layerKey: layerKeyComponent(store),
+        textKey: textKeyComponent(store)
       },
       computed: {
         selected: () => store.getters['visualKeys/selected'],
+        config() {
+          return store.getters['visualKeys/key'](this.index);
+        },
         classObject() {
-          let clazz = this.clazz.reduce(
+          let clazz = this.config.class.reduce(
             (acc, cl) => {
               acc[cl] = true;
               return acc;
@@ -674,16 +720,21 @@ $(document).ready(() => {
               'keycode-select': this.selected === this.config.dataIndex,
               'key-container': this.config.type === 'container',
               'key-layer': this.config.type === 'layer',
-              empty: this.config.keycode === 'KC_NO',
+              empty: this.isEmpty,
               'active-key': this.over,
             }
           );
           return clazz;
-        }
+        },
+        name() {
+          return this.config.name;
+        },
+        isEmpty() {
+          return this.config.keycode === 'KC_NO'
+        },
       },
       data() {
         return {
-          clazz: this.config.class,
           over: false,
         };
       },
@@ -700,6 +751,8 @@ $(document).ready(() => {
               return 'containerKey';
             case 'layer':
               return 'layerKey';
+            case 'text':
+              return 'textKey';
             default:
               return '';
           }
@@ -712,7 +765,10 @@ $(document).ready(() => {
           this.over = false;
           store.commit('visualKeys/setSelected', this.config.dataIndex);
           store.dispatch('visualKeys/clicked', data.code);
-        }
+        },
+        remove() {
+          store.commit('visualKeys/clear', this.config.dataIndex);
+        },
       }
     });
   }
@@ -1665,7 +1721,8 @@ $(document).ready(() => {
         dataType: 'key',
         dataW: d.w,
         dataH: d.h,
-        keycode: 'KC_NO'
+        keycode: 'KC_NO',
+        name: 'N/A',
       };
       //      $(key).droppable(droppable_config(key, k));
       //      $visualKeymap.append(key);

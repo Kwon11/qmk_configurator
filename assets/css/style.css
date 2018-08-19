@@ -868,8 +868,7 @@ button {
   background: #eee;
 }
 
-.key.empty:before {
-  content: 'N/A';
+.key.empty {
   color: #ccc;
 }
 

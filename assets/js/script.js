@@ -158,6 +158,7 @@ $(document).ready(() => {
       state: {
         keyboard: '',
         keyboards: [],
+        _keyboards: [],
         layout: '',
         layouts: {},
         keymapName: '',
@@ -266,6 +267,7 @@ $(document).ready(() => {
         },
         setKeyboards(state, _keyboards) {
           state.keyboards = _keyboards;
+          state._keyboards = _keyboards; // make a 2nd copy
         },
         setLayout(state, _layout) {
           state.layout = _layout;
@@ -290,7 +292,7 @@ $(document).ready(() => {
         },
         setFilter(state, filter) {
           state.filter = filter;
-          let keyboards = state.keyboards.filter((k) => {
+          let keyboards = state._keyboards.filter(k => {
             if (state.filter === '') {
               return true;
             }
@@ -298,7 +300,7 @@ $(document).ready(() => {
           });
           if (keyboards.length > 0) {
             // only use filter if it matches
-            state.keyboards = keyboards
+            state.keyboards = keyboards;
           }
         },
         /**
@@ -766,6 +768,15 @@ $(document).ready(() => {
         realKeymapName: function(newName, oldName) {
           if (newName !== oldName) {
             this.keymapName = newName;
+          }
+        },
+        $route: function(to/*, from*/) {
+          if (to.query) {
+            let filter = to.query.filter;
+            if (!_.isUndefined(filter)) {
+              this.updateFilter(filter);
+              this.updateKeyboard(_.first(this.keyboards))
+            }
           }
         }
       },
